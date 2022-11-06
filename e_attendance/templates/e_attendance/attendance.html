@@ -1,0 +1,28 @@
+{% extends "e_attendance/layout.html" %}
+
+{% block title %}Attendance{% endblock %}
+
+{% block body %}
+<h1>Attendance</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Time in</th>
+            <th scope="col">Time out</th>
+            <th scope="col">Status</th>
+            <th scope="col">Remarks</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Oct. 22, 2022</th>
+            <td>11:00 am</td>
+            <td>12:00 pm</td>
+            <td>Active</td>
+            <td>Present</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
