@@ -35,19 +35,18 @@ class Guardian(models.Model):
 
 
 class Class(models.Model):
-    subject_id = models.ForeignKey(
+    subject = models.ForeignKey(
         "Subject", 
         on_delete=models.SET_NULL, 
         related_name="classes",
         null=True
     )
-    instructor_id = models.ForeignKey(
+    instructor = models.ForeignKey(
         Instructor, 
         on_delete=models.SET_NULL, 
         related_name="classes",
         null=True
     )
-    start_time = models.TimeField()
 
 
 class Course(models.Model):
@@ -60,3 +59,10 @@ class Subject(models.Model):
 
 class Department(models.Model):
     name = models.CharField(max_length=50)
+
+
+class ClassSchedule(models.Model):
+    _class = models.ForeignKey("Class", on_delete=models.SET_NULL, related_name="schedule", null=True)
+    day = models.CharField(max_length=2)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
