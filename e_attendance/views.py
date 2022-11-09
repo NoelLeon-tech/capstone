@@ -25,11 +25,11 @@ def login_view(request):
             login(request, user)
             return redirect(reverse("index"))
         else:
-            return render(request, "e_attendance/login.html", {
+            return render(request, "registration/login.html", {
                 "message": "Invalid username and/or password."
             })
     else:
-        return render(request, "e_attendance/login.html")
+        return render(request, "registration/login.html")
 
 
 def logout_view(request):
