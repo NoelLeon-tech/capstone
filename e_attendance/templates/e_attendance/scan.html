@@ -1,0 +1,44 @@
+{% extends "e_attendance/layout.html" %}
+
+{% block title %}Scan{% endblock %}
+
+{% load static %}
+
+{% block script %}
+    <script src="{% static 'e_attendance/js/opencv.js' %}" type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            let imgElement = document.getElementById("image-src")
+            let inputElement = document.getElementById("file-input");
+            inputElement.addEventListener("change", (e) => {
+                imgElement.src = URL.createObjectURL(e.target.files[0]);
+            }, false);
+
+            imgElement.onload = function () {
+                let mat = cv.imread(imgElement);
+                cv.imshow('canvas', mat);
+                mat.delete();
+            };
+
+            var Module = {
+                // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+                onRuntimeInitialized() {
+                    document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+                }
+            };
+        })
+    </script>
+{% endblock %}
+
+{% block body %}
+    <h1>Scan</h1>
+    <p id="status">OpenCV.js is loading...</p>
+
+    <div>
+        <img id="image-src" alt="No image">
+        <input id="file-input" type="file" name="">
+    </div>
+    <div>
+        <canvas id="canvas"></canvas>
+        <div class="caption">Output</div>
+    </div>
+{% endblock %}

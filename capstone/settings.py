@@ -138,8 +138,8 @@ MESSAGE_TAGS = {
 }
 
 
-LOGIN_REDIRECT_URL = "index"
-LOGOUT_REDIRECT_URL = "index"
+LOGIN_REDIRECT_URL = "e_attendance:index"
+# LOGOUT_REDIRECT_URL = "index"
 
 DEFAULT_FROM_EMAIL = "noellaurencedr@gmail.com"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
