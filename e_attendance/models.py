@@ -4,17 +4,13 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
 ########################### Start User Models #################################
+
+
 class User(AbstractUser):
-    address = models.CharField(max_length=100, null=True)
-    USER_TYPE_CHOICES = (
-        (1, 'student'),
-        (2, 'teacher'),
-        (3, 'guardian'),
-        (4, 'admin'),
-    )
-    user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, null=True)
+    address = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
+        # return self.username
         return f"{self.first_name} {self.last_name}"
 
 
@@ -59,6 +55,8 @@ class Admin(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
+
+
 ########################### End User Models #################################
 
 
@@ -74,6 +72,10 @@ class Class(models.Model):
         on_delete=models.SET_NULL, 
         related_name="classes",
         null=True
+    )
+    students = models.ManyToManyField(
+        Student,
+        related_name="classes"
     )
     school_year = models.IntegerField()
     semester = models.IntegerField()
@@ -101,22 +103,56 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Class_Schedule(models.Model):
+    _class = models.ForeignKey(
+        Class, 
+        on_delete=models.SET_NULL, 
+        related_name="schedule", 
+        null=True,
+        db_column="class_id"
+    )
+    DAY_CHOICES = [
+        ("M", "Monday"),
+        ("T", "Tuesday"),
+        ("W", "Wednesday"),
+        ("TH", "Thursday"),
+        ("F", "Friday"),
+        ("S", "Saturday")
+    ]
+    day = models.CharField(max_length=2, choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+
+class Session(models.Model):
+    _class = models.ForeignKey(
+        Class,
+        on_delete=models.CASCADE,
+        related_name="sessions"
+    )
+    date = models.DateField()
+    is_open = models.BooleanField(default=True)
+
+
 ########################### Start Many-to-Many Relationships #################################
+
+
 class Student_Guardian(models.Model):
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True)
     guardian = models.ForeignKey(Guardian, on_delete=models.SET_NULL, null=True)
     relationship_to_student = models.CharField(max_length=20)
 
 
-class Class_Schedule(models.Model):
-    _class = models.ForeignKey(
-        "Class", 
-        on_delete=models.SET_NULL, 
-        related_name="schedule", 
-        null=True,
-        db_column="class_id"
+class Attendance(models.Model):
+    session = models.ForeignKey(
+        Session, 
+        on_delete=models.CASCADE,
+        related_name="attendees"
     )
-    day = models.CharField(max_length=2)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendances")
+    time_in = models.TimeField(auto_now_add=True)
+
+
 ########################### End Many-to-Many Relationships #################################

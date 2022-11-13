@@ -3,10 +3,19 @@ from django.http import HttpResponse
 from django.contrib.auth import logout
 from django.urls import reverse
 
+from .models import *
+
 # Create your views here.
 def index(request):
     if request.user.is_authenticated:
-        return render(request, "e_attendance/index.html")
+        school_year = request.GET.get("school-year", 2022)
+        semester = request.GET.get("semester", 2)
+        student = Student.objects.get(pk=request.user.id)
+        return render(request, "e_attendance/index.html", {
+            "classes": student.classes.filter(school_year=school_year, semester=semester),
+            "school_year": school_year,
+            "semester": semester
+        })
     else:
         return redirect(reverse("login"))
         

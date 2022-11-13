@@ -2,48 +2,54 @@
 
 {% block title %}E-attendance{% endblock %}
 
+{% block script %}
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector("#school-year").value = {{ school_year }};
+            document.querySelector("#semester").value = {{ semester }};
+        })
+    </script>
+{% endblock %}
+
 {% block body %}
 <div class="container" style="max-width: 576px;">
     <div class="card mb-5">
         <div class="card-body fw-bold text-center fs-5 px-5">
-            <form action="">
+            <form action="{% url 'e_attendance:index' %}" method="get">
                 <div class="d-flex mb-3">
-                    <label for="sy" class="me-auto">S.Y.</label>
-                    <select name="sy" id="sy" class="form-select">
-                        <option>---</option>
-                        <option value="">one</option>
-                        <option value="">two</option>
+                    <label for="school-year" class="me-auto">School Year</label>
+                    <select name="school-year" id="school-year" class="form-select text-center" required>
+                        <option value="">---</option>
+                        <option value=2019>2019</option>
+                        <option value=2020>2020</option>
+                        <option value=2021>2021</option>
+                        <option value=2022>2022</option>
                     </select>
                 </div>
-                <div class="d-flex">
+                <div class="d-flex mb-3">
                     <label for="semester" class="me-auto">Semester</label>
-                    <select name="semester" id="semester" class="form-select">
-                        <option>---</option>
-                        <option value="">one</option>
-                        <option value="">two</option>
+                    <select name="semester" id="semester" class="form-select text-center" required>
+                        <option value="">---</option>
+                        <option value=1>1</option>
+                        <option value=2>2</option>
                     </select>
                 </div>
+                <input type="submit" value="Filter" class="btn btn-primary d-block w-100">
             </form>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <h1 class="text-center mb-4" id="subjects">Subjects</h1>
+            <h1 class="text-center mb-4" id="classes">Classes</h1>
             <div class="d-grid gap-3">
-                <a href="{% url 'e_attendance:attendance' subject_id=1 %}" class="btn btn-primary">
-                    Math
-                </a>
-                <a href="{% url 'e_attendance:attendance' subject_id=2 %}" class="btn btn-primary">
-                    English
-                </a>
-                <a href="{% url 'e_attendance:attendance' subject_id=3 %}" class="btn btn-primary">
-                    Science
-                </a>
-                <a href="{% url 'e_attendance:attendance' subject_id=4 %}" class="btn btn-primary">
-                    Filipino
-                </a>
-
+                {% for class in classes %}
+                    <a href="#" class="btn btn-primary">
+                        {{ class.subject.name }}
+                    </a>
+                {% empty %}
+                    <p>You are not in any class.</p>
+                {% endfor %}
             </div>
         </div>
     </div>
