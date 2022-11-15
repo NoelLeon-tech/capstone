@@ -9,7 +9,7 @@
             let schoolYear = params.get("school-year");
             let semester = params.get("semester");
             document.querySelector("#school-year").value = schoolYear ? schoolYear : new Date().getFullYear();
-            document.querySelector("#semester").value = semester ? semester : "";
+            document.querySelector("#semester").value = semester ? semester : 2;
         })
     </script>
 {% endblock %}

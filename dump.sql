@@ -39,36 +39,6 @@ LOCK TABLES `e_attendance_admin` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `e_attendance_attendance`
---
-
-DROP TABLE IF EXISTS `e_attendance_attendance`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `e_attendance_attendance` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `time_in` time(6) NOT NULL,
-  `meeting_id` bigint NOT NULL,
-  `student_id` bigint NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `e_attendance_attenda_meeting_id_bfecbab5_fk_e_attenda` (`meeting_id`),
-  KEY `e_attendance_attenda_student_id_d19d50bb_fk_e_attenda` (`student_id`),
-  CONSTRAINT `e_attendance_attenda_meeting_id_bfecbab5_fk_e_attenda` FOREIGN KEY (`meeting_id`) REFERENCES `e_attendance_meeting` (`id`),
-  CONSTRAINT `e_attendance_attenda_student_id_d19d50bb_fk_e_attenda` FOREIGN KEY (`student_id`) REFERENCES `e_attendance_student` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `e_attendance_attendance`
---
-
-LOCK TABLES `e_attendance_attendance` WRITE;
-/*!40000 ALTER TABLE `e_attendance_attendance` DISABLE KEYS */;
-INSERT INTO `e_attendance_attendance` VALUES (1,'23:06:23.630604',1,6);
-/*!40000 ALTER TABLE `e_attendance_attendance` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `e_attendance_class`
 --
 
@@ -225,37 +195,6 @@ LOCK TABLES `e_attendance_instructor` WRITE;
 /*!40000 ALTER TABLE `e_attendance_instructor` DISABLE KEYS */;
 INSERT INTO `e_attendance_instructor` VALUES (2,1),(3,1);
 /*!40000 ALTER TABLE `e_attendance_instructor` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `e_attendance_meeting`
---
-
-DROP TABLE IF EXISTS `e_attendance_meeting`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `e_attendance_meeting` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `day` varchar(2) NOT NULL,
-  `start_time` time(6) NOT NULL,
-  `end_time` time(6) NOT NULL,
-  `date` date NOT NULL,
-  `is_open` tinyint(1) NOT NULL,
-  `_class_id` bigint NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `e_attendance_meeting__class_id_ee8f4c32_fk_e_attendance_class_id` (`_class_id`),
-  CONSTRAINT `e_attendance_meeting__class_id_ee8f4c32_fk_e_attendance_class_id` FOREIGN KEY (`_class_id`) REFERENCES `e_attendance_class` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `e_attendance_meeting`
---
-
-LOCK TABLES `e_attendance_meeting` WRITE;
-/*!40000 ALTER TABLE `e_attendance_meeting` DISABLE KEYS */;
-INSERT INTO `e_attendance_meeting` VALUES (1,'M','08:00:00.000000','09:30:00.000000','2022-11-14',1,1);
-/*!40000 ALTER TABLE `e_attendance_meeting` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

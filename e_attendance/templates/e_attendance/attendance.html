@@ -8,19 +8,22 @@
 <table class="table">
     <thead>
         <tr>
-            <th scope="col">Date</th>
+            <th scope="col">Time In</th>
+            <th scope="col">Start Time</th>
+            <th scope="col">End Time</th>
             <th scope="col">Day</th>
-            <th scope="col">Time in</th>
+            <th scope="col">Date</th>
             <th scope="col">Remarks</th>
         </tr>
     </thead>
     <tbody>
         {% for attendance in attendances %}
             <tr>
-                <td>{{ attendance.meeting.date }}</th>
-                <td>{{ attendance.meeting.day }}</td>
                 <td>{{ attendance.time_in }}</td>
-                <td>Fuck</td>
+                <td>{{ attendance.start_time }}</td>
+                <td>{{ attendance.end_time }}</td>
+                <td>{{ attendance.day }}</td>
+                <td>{{ attendance.date }}</th>
             </tr>
         {% empty %}
             <tr>
