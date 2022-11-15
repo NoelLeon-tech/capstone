@@ -1,0 +1,32 @@
+{% extends "e_attendance/layout.html" %}
+
+{% block title %}Class Attendance{% endblock %}
+
+{% block body %}
+<h1 class="mb-4 text-center">Attendance for {{ class.subject.name }}</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Day</th>
+            <th scope="col">Time in</th>
+            <th scope="col">Remarks</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attendance in attendances %}
+            <tr>
+                <td>{{ attendance.meeting.date }}</th>
+                <td>{{ attendance.meeting.day }}</td>
+                <td>{{ attendance.time_in }}</td>
+                <td>Fuck</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">You don't have any attendance in this class.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

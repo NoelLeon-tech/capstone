@@ -5,8 +5,11 @@
 {% block script %}
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            document.querySelector("#school-year").value = {{ school_year }};
-            document.querySelector("#semester").value = {{ semester }};
+            let params = new URLSearchParams(location.search)
+            let schoolYear = params.get("school-year");
+            let semester = params.get("semester");
+            document.querySelector("#school-year").value = schoolYear ? schoolYear : new Date().getFullYear();
+            document.querySelector("#semester").value = semester ? semester : "";
         })
     </script>
 {% endblock %}
@@ -44,11 +47,11 @@
             <h1 class="text-center mb-4" id="classes">Classes</h1>
             <div class="d-grid gap-3">
                 {% for class in classes %}
-                    <a href="#" class="btn btn-primary">
+                    <a href="{% url 'e_attendance:attendance' class.id %}" class="btn btn-primary">
                         {{ class.subject.name }}
                     </a>
                 {% empty %}
-                    <p>You are not in any class.</p>
+                    <p>You don't have any classes in this school year and semester.</p>
                 {% endfor %}
             </div>
         </div>

@@ -80,6 +80,9 @@ class Class(models.Model):
     school_year = models.IntegerField()
     semester = models.IntegerField()
 
+    def __str__(self):
+        return f"{self.subject} - {self.instructor}"
+
     class Meta:
         verbose_name_plural  =  "Classes"
 
@@ -105,35 +108,44 @@ class Department(models.Model):
         return self.name
 
 
-class Class_Schedule(models.Model):
-    _class = models.ForeignKey(
-        Class, 
-        on_delete=models.SET_NULL, 
-        related_name="schedule", 
-        null=True,
-        db_column="class_id"
-    )
-    DAY_CHOICES = [
-        ("M", "Monday"),
-        ("T", "Tuesday"),
-        ("W", "Wednesday"),
-        ("TH", "Thursday"),
-        ("F", "Friday"),
-        ("S", "Saturday")
-    ]
-    day = models.CharField(max_length=2, choices=DAY_CHOICES)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+# class Class_Schedule(models.Model):
+#     _class = models.ForeignKey(
+#         Class, 
+#         on_delete=models.SET_NULL, 
+#         related_name="schedule", 
+#         null=True,
+#         db_column="class_id"
+#     )
+#     DAY_CHOICES = [
+#         ("M", "Monday"),
+#         ("T", "Tuesday"),
+#         ("W", "Wednesday"),
+#         ("TH", "Thursday"),
+#         ("F", "Friday"),
+#         ("S", "Saturday")
+#     ]
+#     day = models.CharField(max_length=2, choices=DAY_CHOICES)
+#     start_time = models.TimeField()
+#     end_time = models.TimeField()
+
+#     def __str__(self):
+#         return f"{self._class}"
 
 
-class Session(models.Model):
+class Meeting(models.Model):
     _class = models.ForeignKey(
         Class,
         on_delete=models.CASCADE,
         related_name="sessions"
     )
+    day = models.CharField(max_length=2)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
     date = models.DateField()
     is_open = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self._class}"
 
 
 ########################### Start Many-to-Many Relationships #################################
@@ -146,8 +158,8 @@ class Student_Guardian(models.Model):
 
 
 class Attendance(models.Model):
-    session = models.ForeignKey(
-        Session, 
+    meeting = models.ForeignKey(
+        Meeting, 
         on_delete=models.CASCADE,
         related_name="attendees"
     )
