@@ -103,7 +103,7 @@ class Department(models.Model):
 
 
 # class Class_Schedule(models.Model):
-#     class_ = models.ForeignKey(
+#     cls = models.ForeignKey(
 #         Class, 
 #         on_delete=models.SET_NULL, 
 #         related_name="schedule", 
@@ -123,10 +123,10 @@ class Department(models.Model):
 #     end_time = models.TimeField()
 
 #     def __str__(self):
-#         return f"{self.class_}"
+#         return f"{self.cls}"
 ########################### Start Many-to-Many Relationships #################################
 class Class_Student(models.Model):
-    classs = models.ForeignKey(
+    cls = models.ForeignKey(
         Class, 
         on_delete=models.CASCADE, 
         related_name="students",
@@ -141,7 +141,7 @@ class Student_Guardian(models.Model):
 
 
 class Attendance(models.Model):
-    classs = models.ForeignKey(
+    cls = models.ForeignKey(
         Class,
         on_delete=models.CASCADE,
         related_name="attendees",
@@ -155,5 +155,5 @@ class Attendance(models.Model):
     date = models.DateField()
 
     class Meta:
-        unique_together = ["classs", "student", "date"]
+        unique_together = ["cls", "student", "date"]
 ########################### End Many-to-Many Relationships #################################

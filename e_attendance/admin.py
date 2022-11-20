@@ -27,10 +27,10 @@ class Student_Guardian_Admin(admin.ModelAdmin):
     list_display = ("student", "guardian", "relationship_to_student")
 
 class Attendance_Admin(admin.ModelAdmin):
-    list_display = ("classs", "student", "time_in", "start_time", "end_time", "day", "date")
+    list_display = ("cls", "student", "time_in", "start_time", "end_time", "day", "date")
 
 class Class_Student_Admin(admin.ModelAdmin):
-    list_display = ("classs", "student")
+    list_display = ("cls", "student")
 
 ######################### END MODEL CHANGE LIST PAGE OVERRIDES #########################
 

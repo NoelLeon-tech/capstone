@@ -15,7 +15,7 @@ def index(request):
         if request.user.groups.filter(name="students").exists():
             student = Student.objects.get(pk=request.user.id)
             context = {
-                "classes": student.classes.filter(classs__school_year=school_year, classs__semester=semester),
+                "classes": student.classes.filter(cls__school_year=school_year, cls__semester=semester),
                 "user_type": "student"
             }
         else:
@@ -35,7 +35,7 @@ def index(request):
 
     else:
         return redirect(reverse("login"))
-        
+    
 
 def attendance(request, class_id):
     student = Student.objects.get(pk=request.user.id)
