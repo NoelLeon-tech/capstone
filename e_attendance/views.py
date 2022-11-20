@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import logout
 from django.urls import reverse
 from .models import *
@@ -11,20 +11,38 @@ def index(request):
     if request.user.is_authenticated:
         school_year = request.GET.get("school-year", datetime.date.today().year)
         semester = request.GET.get("semester", 2)
-        student = Student.objects.get(pk=request.user.id)
-        return render(request, "e_attendance/index.html", {
-            "classes": student.classes.filter(school_year=school_year, semester=semester),
-        })
+        context = {}
+        if request.user.groups.filter(name="students").exists():
+            student = Student.objects.get(pk=request.user.id)
+            context = {
+                "classes": student.classes.filter(classs__school_year=school_year, classs__semester=semester),
+                "user_type": "student"
+            }
+        else:
+            instructor = Instructor.objects.get(pk=request.user.id)
+            classes = instructor.classes.filter(school_year=school_year, semester=semester)
+            # Find out what courses the instructor handles in a class
+            for c in classes:
+                setattr(c, "courses", c.students.values("student__course__name").distinct())
+                # Find out how many blocks are in a courses
+                for course in c.courses:
+                    course["block_count"] = c.students.filter(student__course__name=course["student__course__name"]).values_list("student__block", flat=True).distinct().count()
+            context = {
+                "classes": classes,
+                "user_type": "instructor"
+            }
+        return render(request, "e_attendance/index.html", context=context)
+
     else:
         return redirect(reverse("login"))
         
 
 def attendance(request, class_id):
     student = Student.objects.get(pk=request.user.id)
-    _class = Class.objects.get(pk=class_id)
+    classs = Class.objects.get(pk=class_id)
     return render(request, "e_attendance/attendance.html", {
-        "attendances": student.attendances.filter(_class=_class),
-        "class": _class
+        "attendances": student.attendances.filter(classs=classs),
+        "class": classs
     })
 
 
@@ -53,4 +71,4 @@ def scan(request):
 
 def logout_view(request):
     logout(request)
-    return redirect(reverse("e_attendance:index"))
+    return redirect(reverse("login"))

@@ -25,8 +25,7 @@ class Student(models.Model):
     block = models.IntegerField()
 
     def __str__(self):
-        return f"{self.user.id}: {self.user.first_name} {self.user.last_name}"
-
+        return f"{self.user.first_name} {self.user.last_name}"
 
 class Instructor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
@@ -72,10 +71,6 @@ class Class(models.Model):
         related_name="classes",
         null=True
     )
-    students = models.ManyToManyField(
-        Student,
-        related_name="classes"
-    )
     school_year = models.IntegerField()
     semester = models.IntegerField()
 
@@ -108,7 +103,7 @@ class Department(models.Model):
 
 
 # class Class_Schedule(models.Model):
-#     _class = models.ForeignKey(
+#     class_ = models.ForeignKey(
 #         Class, 
 #         on_delete=models.SET_NULL, 
 #         related_name="schedule", 
@@ -128,8 +123,17 @@ class Department(models.Model):
 #     end_time = models.TimeField()
 
 #     def __str__(self):
-#         return f"{self._class}"
+#         return f"{self.class_}"
 ########################### Start Many-to-Many Relationships #################################
+class Class_Student(models.Model):
+    classs = models.ForeignKey(
+        Class, 
+        on_delete=models.CASCADE, 
+        related_name="students",
+        db_column="class_id"
+    )
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="classes")
+
 class Student_Guardian(models.Model):
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True)
     guardian = models.ForeignKey(Guardian, on_delete=models.SET_NULL, null=True)
@@ -137,7 +141,7 @@ class Student_Guardian(models.Model):
 
 
 class Attendance(models.Model):
-    _class = models.ForeignKey(
+    classs = models.ForeignKey(
         Class,
         on_delete=models.CASCADE,
         related_name="attendees",
@@ -151,5 +155,5 @@ class Attendance(models.Model):
     date = models.DateField()
 
     class Meta:
-        unique_together = ["_class", "student", "date"]
+        unique_together = ["classs", "student", "date"]
 ########################### End Many-to-Many Relationships #################################
