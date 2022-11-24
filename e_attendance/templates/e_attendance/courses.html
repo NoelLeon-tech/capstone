@@ -1,0 +1,42 @@
+{% extends "e_attendance/layout.html" %}
+
+{% block title %}Courses{% endblock %}
+
+{% block breadcrumb %}
+    <nav aria-label="breadcrumb" class="ps-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'e_attendance:index' %}">Home</a></li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'e_attendance:classes' %}?school-year={{ class.school_year }}&semester={{ class.semester }}">
+                    Classes
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Courses</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block body %}
+    <h1 
+        class="text-center mb-4 fw-bold" 
+        id="classes"
+    >
+        Handled courses under {{ class.subject.name }}
+    </h1>
+    <div class="container" style="max-width: 576px;">
+        <div class="card">
+            <div class="card-body px-5">
+                <div class="d-grid gap-3 text-center">
+                    {% for course in courses %}
+                        <a 
+                            href="{% url 'e_attendance:blocks' class_id=class.id course_id=course.course_id  %}" 
+                            class="btn btn-primary"
+                        >
+                            {{ course.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
