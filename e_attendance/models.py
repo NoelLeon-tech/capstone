@@ -134,9 +134,16 @@ class Class_Student(models.Model):
     )
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="classes")
 
+    def __str__(self):
+        return f"{self.cls} - {self.student}"
+
+    class Meta:
+        unique_together = ["cls", "student"]
+
+
 class Student_Guardian(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True)
-    guardian = models.ForeignKey(Guardian, on_delete=models.SET_NULL, null=True)
+    student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, related_name="guardians")
+    guardian = models.ForeignKey(Guardian, on_delete=models.SET_NULL, null=True, related_name="students")
     relationship_to_student = models.CharField(max_length=20)
 
 
@@ -151,7 +158,7 @@ class Attendance(models.Model):
     time_in = models.TimeField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    day = models.CharField(max_length=2)
+    day = models.CharField(max_length=10)
     date = models.DateField()
 
     class Meta:

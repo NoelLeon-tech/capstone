@@ -1,0 +1,80 @@
+{% extends "e_attendance/layout.html" %}
+
+{% block title %}Classes{% endblock %}
+
+{% block breadcrumb %}
+    {% if group == "guardians" %}
+        <nav aria-label="breadcrumb" class="ps-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'e_attendance:index' %}">Home</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'e_attendance:select_sy_and_sem' student.user.id %}">
+                        S.Y. and Sem
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Classes</li>
+            </ol>
+        </nav>
+    {% else %}
+        <nav aria-label="breadcrumb" class="ps-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'e_attendance:index' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Classes</li>
+            </ol>
+        </nav>
+    {% endif %}
+{% endblock %}
+
+{% block body %}  
+    <h1 
+        class="text-center mb-4 fw-bold" 
+        id="classes"
+    >
+        {% if group == "guardians" %}
+            {{ student.user.first_name }}'s classes in School Year {{ school_year }}, Semester {{ semester }}
+        {% else %}
+            Classes in School Year {{ school_year }}, Semester {{ semester }}
+        {% endif %}
+    </h1>
+    <div class="container" style="max-width: 576px;">
+        <div class="card">
+            <div class="card-body px-5">
+                <div class="d-grid gap-3 text-center">
+                    {% if group == "students" %}
+                        {% for class in classes %}
+                            <a 
+                                href="{% url 'e_attendance:student_attendances' class_id=class.cls.id student_id=0 %}" 
+                                class="btn btn-primary"
+                            >
+                                {{ class.cls.subject.name }}
+                            </a>
+                        {% empty %}
+                            <p>You don't have any classes in this school year and semester.</p>
+                        {% endfor %}
+
+                    {% elif group == "instructors" %}
+                        {% for class in classes %}
+                            <a href="{% url 'e_attendance:courses' class.id %}" class="btn btn-primary">
+                                {{ class.subject.name }}
+                            </a>
+                        {% empty %}
+                            <p>You don't have any classes in this school year and semester.</p>
+                        {% endfor %}
+                    
+                    {% elif group == "guardians" %}
+                        {% for class in classes %}
+                            <a 
+                                href="{% url 'e_attendance:student_attendances' class_id=class.cls.id student_id=student.user.id %}" 
+                                class="btn btn-primary"
+                            >
+                                {{ class.cls.subject.name }}
+                            </a>
+                        {% empty %}
+                            <p> {{ student.user.first_name }} doesn't have any classes in this school year and semester.</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

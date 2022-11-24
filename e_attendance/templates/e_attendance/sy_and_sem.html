@@ -1,0 +1,48 @@
+{% extends "e_attendance/layout.html" %}
+
+{% block title %}Select SY and Sem{% endblock %}
+
+{% block breadcrumb %}
+    {% if group == "guardians" %}
+        <nav aria-label="breadcrumb" class="ps-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'e_attendance:index' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">S.Y. and Sem</li>
+            </ol>
+        </nav>
+{% endif %}
+{% endblock %}
+
+{% block body %}
+    <h1 class="text-center fw-bold mb-4">Select School Year and Semester.</h1>
+    <div class="container d-flex flex-column justify-content-center" style="max-width: 576px;">
+        <div class="card">
+            <div class="card-body fw-bold text-center fs-5 px-5">
+                <form action="{% url 'e_attendance:classes' %}" method="get">
+                    <div class="d-flex mb-2">
+                        <label for="school-year" class="me-auto">School Year</label>
+                        <select name="school-year" id="school-year" class="form-select text-center" required>
+                            <option value="" selected>---</option>
+                            <option value=2019>2019</option>
+                            <option value=2020>2020</option>
+                            <option value=2021>2021</option>
+                            <option value=2022>2022</option>
+                        </select>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <label for="semester" class="me-auto">Semester</label>
+                        <select name="semester" id="semester" class="form-select text-center" required>
+                            <option value="" selected>---</option>
+                            <option value=1>1</option>
+                            <option value=2>2</option>
+                        </select>
+                    </div>
+                    {% if group == "guardians" %}
+                        <input type="hidden" name="student_id" value={{ student_id }}>
+                    {% endif %}
+                    <input type="submit" value="Go" class="btn btn-primary d-block w-100">
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
