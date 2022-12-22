@@ -28,5 +28,4 @@ urlpatterns = [
     path("create_attendance_qr", views.create_attendance_qr, name="create_attendance_qr"),
     ###########################################################
     path("accounts/logout", views.logout_view, name="logout"),
-    path("try1", views.try1, name="try1")
 ]
