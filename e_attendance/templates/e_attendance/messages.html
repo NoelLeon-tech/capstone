@@ -1,0 +1,239 @@
+{% extends "e_attendance/layout.html" %}
+
+{% block title %}Messages{% endblock %}
+
+{% load user_group_tag %}
+
+{% load static %}
+
+{% block script %}
+<script src="{% static 'e_attendance/js/getCookie.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const userId = parseInt(document.querySelector("#user-id").innerHTML);
+        const messagesContainer = document.querySelector("#messages-container");
+        const messageForm = document.querySelector("#message-form");
+
+        // Function for getting the messages where the sender or receiver is
+        // the contact clicked from the contacts panel.
+        async function getMessages(contactId) {
+            const response = await fetch(`/get_messages/${contactId}`);
+            const messages = await response.json()
+            const message_divs = [];
+            // Iterate through each message.
+            for (let message of messages) {
+                // If the sender of the message is the logged in user, display the message
+                // to the right side.
+                if (message["sender_id"] === userId) {
+                    message_divs.push(`
+                <div id=${message.id} class="card text-bg-primary mb-2 message" style="max-width: 50%; justify-self: end;">
+                    <div class="card-body p-2">
+                        ${message.content}
+                        <div style="font-size: .6rem; display: none;" class="read-status">${message.is_read ? "Read" : "Unread"}</div>
+                    </div>
+                </div>
+            `);
+                }
+                // If the sender of the message is not the logged in user, display the message
+                // to the left side.
+                else {
+                    message_divs.push(`
+                <div id=${message.id} class="card mb-2 message" style="max-width: 50%; justify-self: start;">
+                    <div class="card-body p-2">
+                        ${message.content}
+                        <div style="font-size: .6rem; display: none;" class="read-status">${message.is_read ? "Read" : "Unread"}</div>
+                    </div>
+                </div>
+            `);
+                }
+                // Add all of the messages to the messages window.
+                messagesContainer.innerHTML = message_divs.join("");
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        // Function for sending a message.
+        async function sendMessage(receiverId, content) {
+            const response = await fetch("/send_message", {
+                method: "POST",
+                mode: "same-origin",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                body: JSON.stringify({
+                    "receiver_id": receiverId,
+                    "content": content
+                })
+            })
+            const message = await response.json();
+            // The code below is just about creating an html element for the message
+            // then adding it to the messages window.
+            messageCard = document.createElement("div");
+            messageCard.classList.add("card", "text-bg-primary", "mb-2", "message");
+            messageCard.setAttribute("style", "max-width: 50%; justify-self: end;");
+            messageCardBody = document.createElement("div")
+            messageCardBody.classList.add("card-body", "p-2");
+            messageCardBody.innerHTML = message.content;
+            messageCard.append(messageCardBody);
+            messagesContainer.append(messageCard);
+
+            document.querySelector("#message-input").value = "";
+        }
+
+        // Function for updating the read status of a message.
+        async function readMessage(messageId) {
+            const response = await fetch("/read_message", {
+                method: "POST",
+                mode: "same-origin",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                body: JSON.stringify({ "message_id": messageId })
+            })
+        }
+
+        // Each contact in the contacts panel has a click event listener.
+        // Whenever a contact is clicked, the user's conversation with them will
+        // be loaded from the DB and each message in the conversation where the sender
+        // is the logged in user also has a click event listener so whenever the user
+        // clicked any messages they sent, a small text will appear whether the receiver read it
+        // or not.
+        contacts = document.querySelectorAll(".contact");
+        for (let contact of contacts) {
+            contact.onclick = async () => {
+                messagesContainer.innerHTML = "";
+                await getMessages(contact.id);
+                messageForm.dataset.contactId = contact.id;
+
+                const messages = document.querySelectorAll(".message")
+                for (let message of messages) {
+                    if (message.style.justifySelf === "end") {
+                        message.onclick = () => {
+                            const readStatus = message.querySelector(".read-status")
+                            const display = readStatus.style.display
+                            readStatus.style.display = display === "block" ? "none" : "block"
+                        }
+                    }
+
+                }
+
+                const observer = new IntersectionObserver((entries) => {
+                    for (let entry of entries) {
+                        if (entry.isIntersecting) {
+                            console.log("intersecting")
+                            readMessage(entry.target.id)
+                            observer.unobserve(entry.target)
+                        }
+                    }
+                }, {
+                    root: messagesContainer,
+                    threshold: .6
+                })
+
+                for (let message of messagesContainer.children) {
+                    if (message.style.justifySelf === "start") {
+                        if (message.querySelector(".read-status").textContent === "Unread") {
+                            observer.observe(message)
+                        }
+                    }
+                }
+            }
+        }
+
+        // When the message from is submitted, it will call the sendMessage function above.
+        messageForm.onsubmit = (e) => {
+            e.preventDefault();
+            content = document.querySelector("#message-input").value;
+            sendMessage(messageForm.dataset.contactId, content);
+        }
+    })
+</script>
+{% endblock %}
+
+{% block body %}
+<style>
+    .contact,
+    .message {
+        cursor: pointer;
+    }
+
+    .active-contact {
+        color: white;
+        background-color: #0d6efd;
+    }
+
+    @media screen and (max-width: 768px) {
+        #contacts-container {
+            height: 25vh !important;
+        }
+
+        #messages-container {
+            height: 40vh !important;
+        }
+    }
+</style>
+
+<div id="user-id" class="d-none">{{ request.user.id }}</div>
+
+<div class="row g-2 border rounded border-2 mt-3 p-2">
+    <div class="col-12 col-md-5 col-lg-4">
+        <div class="fs-5 text-center mb-3">Contacts</div>
+        <div id="contacts-container" class="p-2 border rounded" style="height: 70vh; overflow: auto;">
+            <!-- {% for contact_id, data in contacts.items %}
+            <div class="card mb-2 contact" id={{ contact_id }}>
+                <div class="card-body p-2">
+                    <div>{{ data.teacher_name }}</div>
+                    {% for subject, students in data.subjects.items %}
+                    <div style="font-size: small;">
+                        {{ students|join:", " }}'s teacher in {{ subject }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %} -->
+
+            <div class="accordion" id="accordionExample">
+                {% for contact_id, data in contacts.items %}
+                <div class="accordion-item contact" id={{ contact_id }}>
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapse{{contact_id}}">
+                            {% if request.user|in_group:"guardians" %}
+                            {{ data.teacher_name }}
+                            {% elif request.user|in_group:"teachers" %}
+                            {{ data.guardian_name }}
+                            {% endif %}
+
+                        </button>
+                    </h2>
+                    <div id="collapse{{contact_id}}" class="accordion-collapse collapse"
+                        data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            {% if request.user|in_group:"guardians" %}
+                            {% for subject, students in data.subjects.items %}
+                            <div style="font-size: small;">
+                                {{ students|join:", " }}'s teacher in <b>{{ subject }}</b>.
+                            </div>
+                            {% endfor %}
+                            {% elif request.user|in_group:"teachers" %}
+                            <div style="font-size: small;">
+                                {{ data.students|join:", " }}'s <b>guardian</b>.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-7 col-lg-8 d-flex flex-column">
+        <div class="fs-5 text-center mb-3">Messages</div>
+        <div class="d-flex flex-column">
+            <div class="border rounded mb-2 p-2"
+                style="display: grid; align-content: start; height: 62vh; overflow: auto;" id="messages-container">
+            </div>
+            <form class="d-flex" id="message-form">
+                <input type="text" name="message" id="message-input" class="form-control me-2">
+                <input type="submit" value="Send" class="btn btn-primary">
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

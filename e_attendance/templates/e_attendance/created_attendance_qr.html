@@ -4,33 +4,6 @@
 
 {% load static %}
 
-{% block breadcrumb %}
-    <nav aria-label="breadcrumb" class="ps-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{% url 'e_attendance:index' %}">Home</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'e_attendance:classes' %}?school-year={{ class.school_year }}&semester={{ class.semester }}">
-                    Classes
-                </a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'e_attendance:courses' class.id %}">Courses</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'e_attendance:blocks' class_id=class.id course_id=course_id %}">Blocks</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'e_attendance:class_attendances' class_id=class.id course_id=course_id block=block_num %}">
-                    Attendances
-                </a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Attendance QR Code</li>
-        </ol>
-    </nav>
-{% endblock %}
-
 {% block body %}
 <div class="d-flex flex-column align-items-center">
     <h1 class="fs-3 fw-bold">Attendance QR Code for {{ class.subject.name }}</h1>

@@ -1,0 +1,28 @@
+{% extends "e_attendance/layout.html" %}
+
+{% load user_group_tag %}
+
+{% with user=request.user %}
+
+{% block title %}{{ user.first_name }}'s profile{% endblock %}
+
+{% block body %}
+    <h1 class="fw-bold">Profile</h1>
+
+    <div><b>First name:</b> {{ user.first_name }}</div>
+    <div><b>Last name:</b> {{ user.last_name }}</div>
+    <div><b>Email:</b> {{ user.email }} </div>
+    {% if request.user|in_group:"students" %}
+        {% if user.student.course %}
+            <div><b>Course:</b> {{ user.student.course.name }}</div>
+        {% else %}
+            <div><b>Strand:</b> {{ user.student.strand.name }}</div>
+        {% endif %}
+    <div><b>Year/Grade:</b> {{ user.student.year }}</div>
+    <div><b>Block:</b> {{ user.student.block }}</div>
+    {% elif request.user|in_group:"teachers" %}
+        <div><b>Deparment:</b> {{ user.teacher.department.name }} </div>
+    {% endif %}
+{% endblock %}
+
+{% endwith %}
