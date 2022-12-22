@@ -1,80 +1,178 @@
-{% extends "e_attendance/layout.html" %}
+{% load user_group_tag %}
 
-{% block title %}Classes{% endblock %}
+<h1 class="mb-3 fw-bold">Classes</h1>
 
-{% block breadcrumb %}
-    {% if group == "guardians" %}
-        <nav aria-label="breadcrumb" class="ps-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'e_attendance:index' %}">Home</a></li>
-                <li class="breadcrumb-item">
-                    <a href="{% url 'e_attendance:select_sy_and_sem' student.user.id %}">
-                        S.Y. and Sem
-                    </a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Classes</li>
-            </ol>
-        </nav>
-    {% else %}
-        <nav aria-label="breadcrumb" class="ps-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'e_attendance:index' %}">Home</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Classes</li>
-            </ol>
-        </nav>
+<h4>Filter by:</h4>
+
+<form action="" class="mb-3 d-flex flex-wrap align-items-end">
+    <label class="me-3 mb-3">
+        School Year
+        <select name="school_year" class="form-select form-select-sm" id="school_year">
+            <option value="" selected>------</option>
+            {% for school_year in school_years %}
+            <option value={{ school_year }}>{{ school_year }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label class="me-3 mb-3">
+        Semester
+        <select name="semester" class="form-select form-select-sm" id="semester">
+            <option value="" selected>------</option>
+            {% for semester in semesters %}
+            <option value={{ semester }}>{{ semester }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    {% if request.user|in_group:"teachers" or request.user|in_group:"guardians" %}
+    <label class="me-3 mb-3">
+        Course
+        <select name="course_id" id="course_id" class="form-select form-select-sm">
+            <option value="" selected>------</option>
+            {% for course in courses %}
+            <option value={{ course.id }}>{{ course.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label class="me-3 mb-3">
+        Strand
+        <select name="strand_id" id="strand_id" class="form-select form-select-sm">
+            <option value="" selected>------</option>
+            {% for strand in strands %}
+            <option value={{ strand.id }}>{{ strand.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
     {% endif %}
-{% endblock %}
+    <input type="reset" value="Reset" class="btn btn-sm btn-secondary me-2 mb-3" id="reset">
+    <input type="submit" value="Filter" class="btn btn-sm btn-primary mb-3">
+</form>
 
-{% block body %}  
-    <h1 
-        class="text-center mb-4 fw-bold" 
-        id="classes"
-    >
-        {% if group == "guardians" %}
-            {{ student.user.first_name }}'s classes in School Year {{ school_year }}, Semester {{ semester }}
-        {% else %}
-            Classes in School Year {{ school_year }}, Semester {{ semester }}
-        {% endif %}
-    </h1>
-    <div class="container" style="max-width: 576px;">
-        <div class="card">
-            <div class="card-body px-5">
-                <div class="d-grid gap-3 text-center">
-                    {% if group == "students" %}
-                        {% for class in classes %}
-                            <a 
-                                href="{% url 'e_attendance:student_attendances' class_id=class.cls.id student_id=0 %}" 
-                                class="btn btn-primary"
-                            >
-                                {{ class.cls.subject.name }}
-                            </a>
-                        {% empty %}
-                            <p>You don't have any classes in this school year and semester.</p>
-                        {% endfor %}
-
-                    {% elif group == "instructors" %}
-                        {% for class in classes %}
-                            <a href="{% url 'e_attendance:courses' class.id %}" class="btn btn-primary">
-                                {{ class.subject.name }}
-                            </a>
-                        {% empty %}
-                            <p>You don't have any classes in this school year and semester.</p>
-                        {% endfor %}
-                    
-                    {% elif group == "guardians" %}
-                        {% for class in classes %}
-                            <a 
-                                href="{% url 'e_attendance:student_attendances' class_id=class.cls.id student_id=student.user.id %}" 
-                                class="btn btn-primary"
-                            >
-                                {{ class.cls.subject.name }}
-                            </a>
-                        {% empty %}
-                            <p> {{ student.user.first_name }} doesn't have any classes in this school year and semester.</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
+<div class="row gy-4">
+    {% if request.user|in_group:"students" %}
+    {% for class_student in class_students %}
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card" style="height: 100%;">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ class_student.cls.subject.name }}</h5>
+                <h6 class="card-subtitle mb-2">
+                    Teacher: {{ class_student.cls.teacher.first_name }} {{ class_student.cls.teacher.last_name }}
+                </h6>
+                <div class="text-muted">School Year: {{ class_student.cls.school_year }}</div>
+                <div class="text-muted mb-3">Semester: {{ class_student.cls.semester }}</div>
+                <a href="{% url 'e_attendance:student_attendances' class_id=class_student.cls_id student_id=class_student.student_id %}"
+                    class="btn btn-sm btn-primary mt-auto">
+                    View attendances
+                </a>
             </div>
         </div>
     </div>
-{% endblock %}
+    {% endfor %}
+
+    {% elif request.user|in_group:"teachers" %}
+    {% for class in classes %}
+    {% if class.course %}
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card" style="height: 100%;">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ class.subject.name }}</h5>
+                <h6 class="card-subtitle mb-2">
+                </h6>
+                <div class="text-muted">Course: {{ class.course.name }}</div>
+                <div class="text-muted">Year: {{ class.year }}</div>
+                <div class="text-muted">Block: {{ class.block }}</div>
+                <div class="text-muted">School Year: {{ class.school_year }}</div>
+                <div class="text-muted mb-3">Semester: {{ class.semester }}</div>
+                <a href="{% url 'e_attendance:class_attendances' class_id=class.id %}"
+                    class="btn btn-sm btn-primary mt-auto">
+                    View attendances
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card" style="height: 100%;">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ class.subject.name }}</h5>
+                <h6 class="card-subtitle mb-2">
+                </h6>
+                <div class="text-muted">Strand: {{ class.strand.name }}</div>
+                <div class="text-muted">Grade: {{ class.year }}</div>
+                <div class="text-muted">Block: {{ class.block }}</div>
+                <div class="text-muted">School Year: {{ class.school_year }}</div>
+                <div class="text-muted mb-3">Semester: {{ class.semester }}</div>
+                <a href="{% url 'e_attendance:class_attendances' class_id=class.id %}"
+                    class="btn btn-sm btn-primary mt-auto">
+                    View attendances
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {% elif request.user|in_group:"guardians" %}
+    {% for class_student in class_students %}
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card" style="height: 100%;">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ class_student.cls.subject.name }}</h5>
+                <h6 class="card-subtitle mb-2">
+                    Teacher: {{ class_student.cls.teacher.first_name }} {{ class_student.cls.teacher.last_name }}
+                </h6>
+                <div class="text-muted">School Year: {{ class_student.cls.school_year }}</div>
+                <div class="text-muted mb">Semester: {{ class_student.cls.semester }}</div>
+                {% if class_student.cls.course %}
+                <div class="text-muted mb-3">Course: {{ class_student.cls.course.name }}</div>
+                {% else %}
+                <div class="text-muted mb-3">Strand: {{ class_student.cls.strand.name }}</div>
+                {% endif %}
+                <div class="mb-3">Attended by: {{ class_student.student.first_name }}</div>
+                <a href="{% url 'e_attendance:student_attendances' class_id=class_student.cls_id student_id=class_student.student_id %}"
+                    class="btn btn-sm btn-primary mt-auto">
+                    View attendances
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% endif %}
+</div>
+
+<script>
+    // Get the current url then convert it as a url object.
+    const url = new URL(location.href)
+    // Get the search parameters from the url.
+    searchParams = url.searchParams
+
+    // For each search parameter, set the corresponding select element's value
+    // to the value of that search parameter.
+    for (let sp of searchParams) {
+        document.querySelector(`#${sp[0]}`).value = sp[1]
+    }
+
+    courseId = document.querySelector("#course_id")
+    strandId = document.querySelector("#strand_id")
+
+    if (courseId && strandId) {
+        // Disable the strand select element if the course select element's value
+        // is not empty and vice versa.
+        strandId.disabled = courseId.value !== ""
+        courseId.disabled = strandId.value !== ""
+
+        // Same as above but this will run whenever the values of those two select elements change.
+        courseId.addEventListener("change", () => {
+            strandId.disabled = courseId.value !== ""
+        })
+
+        strandId.addEventListener("change", () => {
+            courseId.disabled = strandId.value !== ""
+        })
+    }
+
+    // Reset the filters when the reset button is clicked.
+    document.querySelector("#reset").addEventListener("click", () => {
+        location.href = location.origin
+    })
+</script>
