@@ -2,29 +2,183 @@
 
 {% load user_group_tag %}
 
-{% block title %}Attendances{% endblock %}
+{% block title %}Class Attendances{% endblock %}
 
 {% block body %}
 <div class="d-flex flex-column align-items-center">
-    <h1 class="mb-1 text-center fw-bold">
+    <!-- Faculty -->
+    {% if request.user|in_group:"faculty" %}
+    <h2 class="mb-1 text-center fw-bold">
         Attendances for {{ class.subject.name }}
-    </h1>
+    </h2>
     {% if class.course %}
-    <h2 class="mb-3">{{ class.course.name }}, year {{ class.year}}, block {{ class.block }}</h2>
+    <h4 class="mb-3">{{ class.course.name }}, year {{ class.year}}, block {{ class.block }}</h4>
+
     {% else %}
-    <h2 class="mb-3">{{ class.strand.name }}, grade {{ class.year}}, block {{ class.block }}</h2>
+    <h4 class="mb-3">{{ class.strand.name }}, grade {{ class.year}}, block {{ class.block }}</h4>
     {% endif %}
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#create-attendance-qr-modal">
-        Create Attendance QR
-    </button>
+
+    <!-- Student -->
+    {% elif request.user|in_group:"students" %}
+    <h2 class="mb-4 text-center fw-bold">
+        Attendances for {{ class.subject.name }}
+    </h2>
+
+    <!-- Guardian -->
+    {% else %}
+    <h2 class="mb-4 text-center fw-bold">
+        {{ student.first_name }}'s attendances for {{ class.subject.name }}
+    </h2>
+    {% endif %}
 </div>
+
+<div class="row">
+    <div class="col-12 col-lg-6 d-flex align-items-end">
+        <form action="{% url 'e_attendance:class_attendances' class_id=class.id %}" class="mb-3">
+            <h5>Filter result by date range</h5>
+            <label>
+                Start date
+                <input type="date" name="start_date" class="form-control form-control-sm" required>
+            </label>
+            <label>
+                End date
+                <input type="date" name="end_date" class="form-control form-control-sm" required>
+            </label>
+            {% if request.user|in_group:"guardians" %}
+            <input type="hidden" name="student_id" value="{{ student.id }}">
+            {% endif %}
+            <input type="reset" value="Reset" class="btn btn-sm btn-secondary">
+            <input type="submit" value="Ok" class="btn btn-sm btn-primary">
+        </form>
+    </div>
+    <!-- Faculty -->
+    {% if request.user|in_group:"faculty" %}
+    <div class="col-12 col-lg-6 d-flex align-items-end justify-content-end">
+        <div class="mb-3">
+            <a href="{% url 'e_attendance:generate_attendance_report' %}?class_id={{ class.id }}"
+                class="btn btn-primary">
+                Generate Attendance Report
+            </a>
+            <!--Generate Attendance Report Modal-->
+            <!-- <div class="modal fade" id="generate-attendance-report-modal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5">Generate Attendance Report</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{% url 'e_attendance:generate_attendance_report' %}" class="mb-3 text-center">
+                                    <h5>Select date range</h5>
+                                    <label>
+                                        Start date
+                                        <input type="date" name="start_date" class="form-control form-control-sm" required>
+                                    </label>
+                                    <label>
+                                        End date
+                                        <input type="date" name="end_date" class="form-control form-control-sm" required>
+                                    </label>
+                                    <input type="hidden" name="class_id" value="{{ class.id }}">
+                                    <input type="submit" value="Ok" class="btn btn-sm btn-primary">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+
+            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#create-attendance-qr-modal">
+                Create QR Code
+            </button>
+            <!-- Create QR Code Modal -->
+            <div class="modal fade" id="create-attendance-qr-modal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5">Create QR Code</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{% url 'e_attendance:create_class_meeting_qr_code' %}" method="post">
+                                {% csrf_token %}
+                                <label class="d-block mb-2">
+                                    Start Time
+                                    <input type="time" name="start_time" class="form-control">
+                                </label>
+                                <label class="d-block mb-2">
+                                    End Time
+                                    <input type="time" name="end_time" class="form-control">
+                                </label>
+                                <input type="hidden" name="class_id" value={{ class.id }}>
+                                <input type="submit" value="Ok" class="btn btn-primary w-100">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
 <div class="table-responsive">
+    {% if request.user|in_group:"faculty" %}
+    <div class="accordion">
+        {% for class_meeting in class_meetings %}
+        <div class="accordion-item" id="accordion">
+            <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapse{{forloop.counter}}">
+                    {{ class_meeting.day }}, {{ class_meeting.date }}, {{ class_meeting.start_time }} - {{ class_meeting.end_time }}
+                </button>
+            </h2>
+            <div id="collapse{{forloop.counter}}" class="accordion-collapse collapse" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Last Name</th>
+                                <th scope="col">First Name</th>
+                                <th scope="col">Time In</th>
+                                <th scope="col">Time Out</th>
+                                <th scope="col">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            {% for attendance in class_meeting.class_attendances %}
+                            <tr>
+                                <td>{{ attendance.student.last_name }}</td>
+                                <td>{{ attendance.student.first_name }}</td>
+                                <td>{{ attendance.time_in }}</td>
+                                <td>{{ attendance.time_out }}</td>
+                                <td>{{ attendance.remarks }}</th>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9">No attendance.</td>
+                            </tr>
+                            {% endfor %}
+                            <tfoot class="table-group-divider">
+                                <tr>
+                                    <td colspan="99" style="text-align: end;" class="fw-bold">
+                                        Number of present: {{ class_meeting.num_of_present }}/{{ num_of_students }}
+                                    </td>
+                                </tr>    
+                            </tfoot>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <!-- Student/Guardian -->
+    {% else %}
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">First Name</th>
-                <th scope="col">Last Name</th>
                 <th scope="col">Time In</th>
+                <th scope="col">Time Out</th>
                 <th scope="col">Start Time</th>
                 <th scope="col">End Time</th>
                 <th scope="col">Day</th>
@@ -33,55 +187,71 @@
             </tr>
         </thead>
         <tbody>
-            {% for attendance in student_attendances %}
+            {% for attendance in page %}
             <tr>
-                <td>{{ attendance.student.first_name }}</td>
-                <td>{{ attendance.student.last_name }}</td>
                 <td>{{ attendance.time_in }}</td>
-                <td>{{ attendance.class_schedule.start_time }}</td>
-                <td>{{ attendance.class_schedule.end_time }}</td>
-                <td>{{ attendance.class_schedule.day }}</td>
-                <td>{{ attendance.date }}</th>
+                <td>{{ attendance.time_out }}</td>
+                <td>{{ attendance.class_meeting.start_time }}</td>
+                <td>{{ attendance.class_meeting.end_time }}</td>
+                <td>{{ attendance.class_meeting.day }}</td>
+                <td>{{ attendance.class_meeting.date }}</td>
                 <td>{{ attendance.remarks }}</th>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4">No one attended this class yet.</td>
+                <td colspan="7">
+                    No attendance.
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% endif %}
 </div>
 
+{% if page.paginator.num_pages > 1 %}
+<nav>
+    <ul class="pagination mt-3 justify-content-center">
+        {% if page.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page_number=1">First</a></li>
+        <li class="page-item">
+            <a class="page-link" href="?page_number={{ page.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        <small class="mx-2 align-self-center">
+            Page {{ page.number }} of {{ page.paginator.num_pages }}
+        </small>
+        {% if page.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page_number={{ page.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page_number={{ page.paginator.num_pages }}">Last</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 
-<!-- Modal -->
-<div class="modal fade" id="create-attendance-qr-modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5">Create Attendance QR</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{% url 'e_attendance:create_attendance_qr' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="course_id" value={{ course.id }}>
-                    <input type="hidden" name="block_num" value={{ block_num }}>
-                    <label class="d-block">
-                        Select class schedule
-                        <select name="class_schedule_id" class="form-select text-center w-100 mb-3" required>
-                            <option value="" selected>---</option>
-                            {% for schedule in class_schedules %}
-                            <option value={{ schedule.id }}>
-                                {{ schedule.day }}, {{ schedule.start_time }} - {{ schedule.end_time }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                    <input type="submit" value="Ok" class="btn btn-primary w-100">
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+
+
+<script>
+    const startDateInput = document.querySelector("input[name='start_date']")
+    const endDateInput = document.querySelector("input[name='end_date']")
+    const resetBtn = document.querySelector("input[type='reset']")
+    let searchParams = new URL(location.href).searchParams
+
+    startDateInput.value = searchParams.get("start_date")
+    endDateInput.value = searchParams.get("end_date")
+
+    resetBtn.onclick = () => {
+        let studentId = searchParams.get("student_id")
+        if (studentId) {
+            location.href = location.origin + location.pathname + `?student_id=${studentId}`
+        }
+        else {
+            location.href = location.origin + location.pathname
+        }
+    }
+</script>
 {% endblock %}

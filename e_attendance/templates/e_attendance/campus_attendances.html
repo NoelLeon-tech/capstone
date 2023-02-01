@@ -1,0 +1,110 @@
+{% extends "e_attendance/layout.html" %}
+
+{% load user_group_tag %}
+
+{% block title %}Campus Attendances{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-column align-items-center mb-4">
+    {% if request.user|in_group:"guardians" %}
+    <h2 class="text-center fw-bold">
+        {{ student.first_name }}'s Campus Attendances
+    </h2>
+    {% else %}
+    <h2 class="text-center fw-bold">
+        Campus Attendances
+    </h2>
+    {% endif %}
+</div>
+
+<div class="d-flex justify-content-between align-items-end">
+    <form action="{% url 'e_attendance:campus_attendances' %}" class="mb-3">
+        <h5>Filter result by date range</h5>
+        <label>
+            Start date
+            <input type="date" name="start_date" class="form-control form-control-sm" required>
+        </label>
+        <label>
+            End date
+            <input type="date" name="end_date" class="form-control form-control-sm" required>
+        </label>
+        {% if request.user|in_group:"guardians" %}
+        <input type="hidden" name="student_id" value="{{ student.id }}">
+        {% endif %}
+        <input type="reset" value="Reset" class="btn btn-sm btn-secondary">
+        <input type="submit" value="Ok" class="btn btn-sm btn-primary">
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Time In</th>
+                <th scope="col">Time Out</th>
+                <th scope="col">Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attendance in page %}
+            <tr>
+                <td>{{ attendance.time_in }}</td>
+                <td>{{ attendance.time_out }}</td>
+                <td>{{ attendance.date }}</th>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">
+                    No attendance.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page.paginator.num_pages > 1 %}
+<nav>
+    <ul class="pagination mt-3 justify-content-center">
+        {% if page.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page_number=1">First</a></li>
+        <li class="page-item">
+            <a class="page-link" href="?page_number={{ page.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        <small class="mx-2 align-self-center">
+            Page {{ page.number }} of {{ page.paginator.num_pages }}
+        </small>
+        {% if page.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page_number={{ page.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page_number={{ page.paginator.num_pages }}">Last</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<script>
+    const startDateInput = document.querySelector("input[name='start_date']")
+    const endDateInput = document.querySelector("input[name='end_date']")
+    const resetBtn = document.querySelector("input[type='reset']")
+    let searchParams = new URL(location.href).searchParams
+
+    startDateInput.value = searchParams.get("start_date")
+    endDateInput.value = searchParams.get("end_date")
+
+    resetBtn.onclick = () => {
+        let studentId = searchParams.get("student_id")
+        if (studentId) {
+            location.href = location.origin + location.pathname + `?student_id=${studentId}`
+        }
+        else {
+            location.href = location.origin + location.pathname
+        }
+    }
+</script>
+
+{% endblock %}

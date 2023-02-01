@@ -1,3 +1,7 @@
 django
 mysqlclient
 qrcode[pil]
+xlsxwriter
+dj-database-url
+whitenoise
+gunicorn

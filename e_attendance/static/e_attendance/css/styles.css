@@ -1,5 +1,8 @@
-.form-select {
-    width: 6rem;
+#div-logo-bg {
+    background-image: url("../images/gip_logo-bg.jpg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .errorlist {
@@ -16,6 +19,6 @@
     margin-bottom: .5em;
 }
 
-.courses {
-    cursor: pointer;
+.navbar-toggler-icon > path {
+    fill: white;
 }

@@ -3,11 +3,14 @@ from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
-########################### Start User Models #################################
+############################################# USER MODELS ##################################################
 class User(AbstractUser):
+    middle_name = models.CharField(max_length=100, blank=True, null=True)
     address = models.CharField(max_length=100, blank=True, null=True)
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+    
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
@@ -37,21 +40,24 @@ class Student(models.Model):
         return f"{self.user.first_name} {self.user.last_name}"
 
 
-class Teacher(models.Model):
+class Faculty(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     department = models.ForeignKey(
         "Department", 
         on_delete=models.SET_NULL, 
-        related_name="teachers", 
+        related_name="faculty", 
         null=True,
         blank=True
     )
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
-########################### End User Models #################################
 
-########################### Other Models  #################################
+    class Meta:
+        verbose_name_plural = "Faculty"
+######################################### USER MODELS ####################################################
+
+##########################################################################################################
 class Course(models.Model):
     name = models.CharField(max_length=50)
 
@@ -94,7 +100,7 @@ class Class(models.Model):
         on_delete=models.SET_NULL, 
         null=True
     )
-    teacher = models.ForeignKey(
+    faculty = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL, 
         related_name="handled_classes",
@@ -106,20 +112,21 @@ class Class(models.Model):
     block = models.IntegerField()
     school_year = models.IntegerField()
     semester = models.IntegerField()
+    total_hours = models.IntegerField()
 
     def __str__(self):
-        return f"{self.subject} - {self.teacher}"
+        return f"{self.subject} - {self.faculty}, {self.course if self.course else self.strand}"
 
     class Meta:
         verbose_name_plural  =  "Classes"
 
 
-class Class_Schedule(models.Model):
+class Class_Meeting(models.Model):
     cls = models.ForeignKey(
         Class, 
         on_delete=models.CASCADE, 
-        related_name="schedules", 
-        db_column="class_id"
+        db_column="class_id", 
+        related_name="class_meetings"
     )
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -132,9 +139,13 @@ class Class_Schedule(models.Model):
         ("Saturday", "Saturday")
     ]
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    date = models.DateField()
 
     def __str__(self):
-        return f"{self.day}: {self.start_time.strftime('%I:%M %p')} - {self.end_time.strftime('%I:%M %p')}"
+        return f"{self.id} {self.cls} | {self.start_time} - {self.end_time} | {self.date}"
+    
+    class Meta:
+        unique_together = ["cls", "start_time", "end_time", "date"]
 
 
 class Class_Student(models.Model):
@@ -154,41 +165,6 @@ class Student_Guardian(models.Model):
     relationship_to_student = models.CharField(max_length=20)
 
 
-class Student_Attendance(models.Model):
-    cls = models.ForeignKey(
-        Class,
-        on_delete=models.CASCADE,
-        db_column="class_id"
-    )
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
-    class_schedule = models.ForeignKey(Class_Schedule, on_delete=models.SET_NULL, null=True)
-    time_in = models.TimeField()
-    date = models.DateField()
-    REMARKS_CHOICES = [
-        ("On time", "On time"),
-        ("Late", "Late")
-    ]
-    remarks = models.CharField(max_length=20, choices=REMARKS_CHOICES)
-
-    class Meta:
-        unique_together = ["cls", "student", "date"]
-
-
-class Employee_Attendance(models.Model):
-    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name="employee_attendances")
-    time_in = models.TimeField()
-    time_out = models.TimeField(blank=True, null=True)
-    date = models.DateField()
-    REMARKS_CHOICES = [
-        ("On time", "On time"),
-        ("Late", "Late")
-    ]
-    remarks = models.CharField(max_length=20, choices=REMARKS_CHOICES)
-
-    class Meta:
-        unique_together = ["employee", "date"]
-
-
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="outbox")
     receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="inbox")
@@ -204,3 +180,73 @@ class Message(models.Model):
             "date_sent": self.date_sent.strftime('%b %d, %Y, %I:%M %p'),
             "is_read": self.is_read
         }
+
+
+class Event(models.Model):
+    name = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    date = models.DateField()
+
+    def __str__(self):
+        return self.name
+###########################################################################################################
+
+########################################## ATTENDANCE MODELS ##########s###################################
+class Class_Attendance(models.Model):
+    class_meeting = models.ForeignKey(
+        Class_Meeting,
+        on_delete=models.CASCADE
+    )
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    time_in = models.TimeField(blank=True, null=True)
+    time_out = models.TimeField(blank=True, null=True)
+    REMARKS_CHOICES = [
+        ("On time", "On time"),
+        ("Late", "Late"),
+        ("Absent", "Absent")
+    ]
+    remarks = models.CharField(max_length=20, choices=REMARKS_CHOICES)
+
+    class Meta:
+        unique_together = ["class_meeting", "student"]
+
+
+class Campus_Attendance(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="campus_attendances")
+    time_in = models.TimeField(blank=True, null=True)
+    time_out = models.TimeField(blank=True, null=True)
+    date = models.DateField()
+
+
+class Faculty_Attendance(models.Model):
+    faculty = models.ForeignKey(User, on_delete=models.CASCADE, related_name="faculty_attendances")
+    time_in = models.TimeField(blank=True, null=True)
+    time_out = models.TimeField(blank=True, null=True)
+    date = models.DateField()
+    REMARKS_CHOICES = [
+        ("On time", "On time"),
+        ("Late", "Late"),
+        ("Absent", "Absent")
+    ]
+    remarks = models.CharField(max_length=20, choices=REMARKS_CHOICES)
+
+    class Meta:
+        unique_together = ["faculty", "date"]
+
+
+class Event_Attendance(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    time_in = models.TimeField(blank=True, null=True)
+    time_out = models.TimeField(blank=True, null=True)
+    REMARKS_CHOICES = [
+        ("On time", "On time"),
+        ("Late", "Late"),
+        ("Absent", "Absent")
+    ]
+    remarks = models.CharField(max_length=20, choices=REMARKS_CHOICES)
+
+    class Meta:
+        unique_together = ["event", "student"]
+

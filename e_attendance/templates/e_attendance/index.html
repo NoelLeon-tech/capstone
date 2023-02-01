@@ -5,9 +5,123 @@
 {% block title %}Home{% endblock %}
 
 {% block body %}
-    {% if request.user|in_group:"admins" %}
-        {% include "e_attendance/face_recognition.html" %}
-    {% else %}
-        {% include "e_attendance/classes.html" %}
+<div id="div-logo-bg" class="img-fluid">
+    <div id="index-div" class="d-flex align-items-center" style="height: calc(80vh);">
+        {% if request.user|in_group:"students" %}
+        <div class="container row gy-3" style="max-width: 300px; margin-inline: auto;">
+            <a href="{% url 'e_attendance:classes' %}" class="btn btn-primary btn-lg">
+                View Class Attendances
+            </a>
+            <a href="{% url 'e_attendance:campus_attendances' %}" class="btn btn-primary btn-lg">
+                View Campus Attendances
+            </a>
+            <a href="{% url 'e_attendance:event_attendances' %}" class="btn btn-primary btn-lg">
+                View Event Attendances
+            </a>
+        </div>
+
+        {% elif request.user|in_group:"faculty" %}
+        <div id="index-div" class="container row gy-3" style="max-width: 300px; margin-inline: auto;">
+            <a href="{% url 'e_attendance:classes' %}" class="btn btn-primary btn-lg">
+                View Class Attendances
+            </a>
+            <a href="{% url 'e_attendance:faculty_attendances' %}" class="btn btn-primary btn-lg">
+                View Faculty Attendances
+            </a>
+            <a href="{% url 'e_attendance:campus_attendances' %}" class="btn btn-primary btn-lg">
+                View Campus Attendances
+            </a>
+        </div>
+
+        {% elif request.user|in_group:"guardians" %}
+        <div class="container row gy-3" style="max-width: 300px; margin-inline: auto;">
+            <button id="view-class-attendances-btn" class="btn btn-primary btn-lg" data-bs-toggle="modal"
+                data-bs-target="#select-student-modal">
+                View Class Attendances
+            </button>
+            <button id="view-campus-attendances-btn" class="btn btn-primary btn-lg" data-bs-toggle="modal"
+                data-bs-target="#select-student-modal">
+                View Campus Attendances
+            </button>
+            <button id="view-event-attendances-btn" class="btn btn-primary btn-lg" data-bs-toggle="modal"
+                data-bs-target="#select-student-modal">
+                View Event Attendances
+            </button>
+
+            <!-- Select Student Modal -->
+            <div class="modal fade" id="select-student-modal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5">Select Student</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="select-student-form">
+                                <select name="student_id" class="form-select mb-3" required>
+                                    <option value="">--------</option>
+                                    {% for sg in student_guardians %}
+                                    <option value={{ sg.student.id }}>{{ sg.student.first_name }} {{ sg.student.last_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="submit" value="Ok" class="btn btn-primary">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+
+        {% elif request.user|in_group:"admins" %}
+        <div class="container row gy-3" style="max-width: 340px; margin-inline: auto;">
+            <a href="{% url 'e_attendance:capture_attendance' %}?attendance_type=campus" class="btn btn-primary btn-lg">
+                Capture Campus Attendance
+            </a>
+            <a href="{% url 'e_attendance:capture_attendance' %}?attendance_type=faculty" class="btn btn-primary btn-lg">
+                Capture Faculty Attendance
+            </a>
+            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#select-event-modal">
+                Capture Event Attendance
+            </button>
+        </div>
+
+        <!-- Select Event Modal -->
+        <div class="modal fade" id="select-event-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5">Select Event</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{% url 'e_attendance:capture_attendance' %}">
+                            <select name="event_id" class="form-select mb-3" required>
+                                <option value="">--------</option>
+                                {% for event in events %}
+                                <option value={{ event.id }}>{{ event.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="attendance_type" value="event">
+                            <input type="submit" value="Ok" class="btn btn-primary">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>    
 {% endif %}
+<!-- Guardian student selection -->
+<script>
+    let viewClassAttendancesBtn = document.querySelector("#view-class-attendances-btn")
+    let viewCampusAttendancesBtn = document.querySelector("#view-campus-attendances-btn")
+    let viewEventAttendancesBtn = document.querySelector("#view-event-attendances-btn")
+    let form = document.querySelector("#select-student-form")
+
+    viewClassAttendancesBtn.onclick = () => form.action = "/classes"
+    viewCampusAttendancesBtn.onclick = () => form.action = "/campus_attendances"
+    viewEventAttendancesBtn.onclick = () => form.action = "/event_attendances"
+</script>
 {% endblock %}

@@ -1,6 +1,11 @@
+{% extends "e_attendance/layout.html" %}
+
 {% load user_group_tag %}
 
-<h1 class="mb-3 fw-bold">Classes</h1>
+{% block title %}Classes{% endblock %}
+
+{% block body %}
+<h2 class="mb-3 fw-bold text-center">Classes</h2>
 
 <h4>Filter by:</h4>
 
@@ -9,11 +14,12 @@
         School Year
         <select name="school_year" class="form-select form-select-sm" id="school_year">
             <option value="" selected>------</option>
-            {% for school_year in school_years %}
+            {% for school_year in school_years %} 
             <option value={{ school_year }}>{{ school_year }}</option>
             {% endfor %}
         </select>
     </label>
+
     <label class="me-3 mb-3">
         Semester
         <select name="semester" class="form-select form-select-sm" id="semester">
@@ -23,7 +29,8 @@
             {% endfor %}
         </select>
     </label>
-    {% if request.user|in_group:"teachers" or request.user|in_group:"guardians" %}
+
+    {% if request.user|in_group:"faculty" %}
     <label class="me-3 mb-3">
         Course
         <select name="course_id" id="course_id" class="form-select form-select-sm">
@@ -33,6 +40,7 @@
             {% endfor %}
         </select>
     </label>
+    
     <label class="me-3 mb-3">
         Strand
         <select name="strand_id" id="strand_id" class="form-select form-select-sm">
@@ -43,10 +51,14 @@
         </select>
     </label>
     {% endif %}
+
+    {% if request.user|in_group:"guardians" %}
+    <input type="hidden" name="student_id" value={{ student.id }}>
+    {% endif %}
     <input type="reset" value="Reset" class="btn btn-sm btn-secondary me-2 mb-3" id="reset">
     <input type="submit" value="Filter" class="btn btn-sm btn-primary mb-3">
 </form>
-
+<!--===========================================For Classes================================================-->
 <div class="row gy-4">
     {% if request.user|in_group:"students" %}
     {% for class_student in class_students %}
@@ -55,20 +67,22 @@
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">{{ class_student.cls.subject.name }}</h5>
                 <h6 class="card-subtitle mb-2">
-                    Teacher: {{ class_student.cls.teacher.first_name }} {{ class_student.cls.teacher.last_name }}
+                    Faculty: {{ class_student.cls.faculty.first_name }} {{ class_student.cls.faculty.last_name }}
                 </h6>
                 <div class="text-muted">School Year: {{ class_student.cls.school_year }}</div>
                 <div class="text-muted mb-3">Semester: {{ class_student.cls.semester }}</div>
-                <a href="{% url 'e_attendance:student_attendances' class_id=class_student.cls_id student_id=class_student.student_id %}"
+                <a href="{% url 'e_attendance:class_attendances' class_id=class_student.cls_id %}"
                     class="btn btn-sm btn-primary mt-auto">
                     View attendances
                 </a>
             </div>
         </div>
     </div>
+    {% empty %}
+    No classes.
     {% endfor %}
 
-    {% elif request.user|in_group:"teachers" %}
+    {% elif request.user|in_group:"faculty" %}
     {% for class in classes %}
     {% if class.course %}
     <div class="col-12 col-sm-6 col-md-4">
@@ -118,23 +132,25 @@
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">{{ class_student.cls.subject.name }}</h5>
                 <h6 class="card-subtitle mb-2">
-                    Teacher: {{ class_student.cls.teacher.first_name }} {{ class_student.cls.teacher.last_name }}
+                    Faculty: {{ class_student.cls.faculty.first_name }} {{ class_student.cls.faculty.last_name }}
                 </h6>
                 <div class="text-muted">School Year: {{ class_student.cls.school_year }}</div>
-                <div class="text-muted mb">Semester: {{ class_student.cls.semester }}</div>
+                <div class="text-muted mb-3">Semester: {{ class_student.cls.semester }}</div>
                 {% if class_student.cls.course %}
-                <div class="text-muted mb-3">Course: {{ class_student.cls.course.name }}</div>
+                <!-- <div class="text-muted mb-3">Course: {{ class_student.cls.course.name }}</div>
                 {% else %}
                 <div class="text-muted mb-3">Strand: {{ class_student.cls.strand.name }}</div>
                 {% endif %}
-                <div class="mb-3">Attended by: {{ class_student.student.first_name }}</div>
-                <a href="{% url 'e_attendance:student_attendances' class_id=class_student.cls_id student_id=class_student.student_id %}"
+                <div class="mb-3">Attended by: {{ class_student.student.first_name }}</div> -->
+                <a href="{% url 'e_attendance:class_attendances' class_id=class_student.cls_id %}?student_id={{ class_student.student_id }}"
                     class="btn btn-sm btn-primary mt-auto">
                     View attendances
                 </a>
             </div>
         </div>
     </div>
+    {% empty %}
+    No classes.
     {% endfor %}
 
     {% endif %}
@@ -148,14 +164,15 @@
 
     // For each search parameter, set the corresponding select element's value
     // to the value of that search parameter.
-    for (let sp of searchParams) {
-        document.querySelector(`#${sp[0]}`).value = sp[1]
-    }
+    document.querySelector("#school_year").value = searchParams.get("school_year") ? searchParams.get("school_year") : ""
+    document.querySelector("#semester").value = searchParams.get("semester") ? searchParams.get("semester") : ""
 
     courseId = document.querySelector("#course_id")
     strandId = document.querySelector("#strand_id")
 
     if (courseId && strandId) {
+        courseId.value = searchParams.get("course_id") ? searchParams.get("course_id") : ""
+        strandId.value = searchParams.get("strand_id") ? searchParams.get("strand_id") : ""  
         // Disable the strand select element if the course select element's value
         // is not empty and vice versa.
         strandId.disabled = courseId.value !== ""
@@ -172,7 +189,12 @@
     }
 
     // Reset the filters when the reset button is clicked.
-    document.querySelector("#reset").addEventListener("click", () => {
-        location.href = location.origin
-    })
+    document.querySelector("#reset").onclick = () => {
+        let studentId = searchParams.get("student_id")
+        if (studentId)
+            location.href = location.origin + location.pathname + `?student_id=${studentId}`
+        else
+            location.href = location.origin + location.pathname
+    }
 </script>
+{% endblock %}
