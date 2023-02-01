@@ -100,7 +100,7 @@ def view_classes(request):
 
 @login_required
 def get_class_attendances(request, class_id):
-    start_date = request.GET.get("start_date", datetime.date(1, 1, 1).strftime("%Y-%m-%d"))
+    start_date = request.GET.get("start_date", "0001-01-01")
     end_date = request.GET.get("end_date", datetime.datetime.now().strftime("%Y-%m-%d"))
     page_number = request.GET.get("page_number", 1)
     cls = Class.objects.get(pk=class_id)
