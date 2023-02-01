@@ -25,10 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-au(r55vw@0%3_=i#cf)m6(4=tl&lzzg6f_390!43xw)6m_)a)5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
+# DEBUG = False if os.environ.get("DEBUG") else True 
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS = ["https://*.railway.app"]
+CSRF_TRUSTED_ORIGINS = ["https://*.railway.app", "http://*"]
 
 # Application definition
 

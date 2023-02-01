@@ -5,10 +5,10 @@
 {% block title %}Class Attendances{% endblock %}
 
 {% block body %}
-<div class="d-flex flex-column align-items-center">
+<div class="d-flex flex-column align-items-center text-center mb-3">
     <!-- Faculty -->
     {% if request.user|in_group:"faculty" %}
-    <h2 class="mb-1 text-center fw-bold">
+    <h2 class="mb-1 fw-bold">
         Attendances for {{ class.subject.name }}
     </h2>
     {% if class.course %}
@@ -20,43 +20,47 @@
 
     <!-- Student -->
     {% elif request.user|in_group:"students" %}
-    <h2 class="mb-4 text-center fw-bold">
+    <h2 class="mb-4 fw-bold">
         Attendances for {{ class.subject.name }}
     </h2>
 
     <!-- Guardian -->
     {% else %}
-    <h2 class="mb-4 text-center fw-bold">
+    <h2 class="mb-4 fw-bold">
         {{ student.first_name }}'s attendances for {{ class.subject.name }}
     </h2>
     {% endif %}
 </div>
 
-<div class="row">
-    <div class="col-12 col-lg-6 d-flex align-items-end">
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
         <form action="{% url 'e_attendance:class_attendances' class_id=class.id %}" class="mb-3">
             <h5>Filter result by date range</h5>
-            <label>
-                Start date
-                <input type="date" name="start_date" class="form-control form-control-sm" required>
-            </label>
-            <label>
-                End date
-                <input type="date" name="end_date" class="form-control form-control-sm" required>
-            </label>
+            <div class="mb-2">
+                <label>
+                    Start date
+                    <input type="date" name="start_date" class="form-control form-control-sm" required>
+                </label>
+                <label>
+                    End date
+                    <input type="date" name="end_date" class="form-control form-control-sm" required>
+                </label>    
+            </div>
             {% if request.user|in_group:"guardians" %}
             <input type="hidden" name="student_id" value="{{ student.id }}">
             {% endif %}
-            <input type="reset" value="Reset" class="btn btn-sm btn-secondary">
-            <input type="submit" value="Ok" class="btn btn-sm btn-primary">
+            <div>
+                <input type="reset" value="Reset" class="btn btn-sm btn-secondary">
+                <input type="submit" value="Ok" class="btn btn-sm btn-primary">    
+            </div>
         </form>
     </div>
     <!-- Faculty -->
     {% if request.user|in_group:"faculty" %}
-    <div class="col-12 col-lg-6 d-flex align-items-end justify-content-end">
-        <div class="mb-3">
+    <div class="col-12 col-lg-6">
+        <div class="mb-3 d-flex justify-content-lg-end">
             <a href="{% url 'e_attendance:generate_attendance_report' %}?class_id={{ class.id }}"
-                class="btn btn-primary">
+                class="btn btn-primary me-2">
                 Generate Attendance Report
             </a>
             <!--Generate Attendance Report Modal-->

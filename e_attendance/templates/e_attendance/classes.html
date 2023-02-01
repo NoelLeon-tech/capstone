@@ -9,54 +9,58 @@
 
 <h4>Filter by:</h4>
 
-<form action="" class="mb-3 d-flex flex-wrap align-items-end">
-    <label class="me-3 mb-3">
-        School Year
-        <select name="school_year" class="form-select form-select-sm" id="school_year">
-            <option value="" selected>------</option>
-            {% for school_year in school_years %} 
-            <option value={{ school_year }}>{{ school_year }}</option>
-            {% endfor %}
-        </select>
-    </label>
-
-    <label class="me-3 mb-3">
-        Semester
-        <select name="semester" class="form-select form-select-sm" id="semester">
-            <option value="" selected>------</option>
-            {% for semester in semesters %}
-            <option value={{ semester }}>{{ semester }}</option>
-            {% endfor %}
-        </select>
-    </label>
-
-    {% if request.user|in_group:"faculty" %}
-    <label class="me-3 mb-3">
-        Course
-        <select name="course_id" id="course_id" class="form-select form-select-sm">
-            <option value="" selected>------</option>
-            {% for course in courses %}
-            <option value={{ course.id }}>{{ course.name }}</option>
-            {% endfor %}
-        </select>
-    </label>
+<form action="" class="mb-3">
+    <div>
+        <label class="me-3 mb-3">
+            School Year
+            <select name="school_year" class="form-select form-select-sm" id="school_year">
+                <option value="" selected>------</option>
+                {% for school_year in school_years %} 
+                <option value={{ school_year }}>{{ school_year }}</option>
+                {% endfor %}
+            </select>
+        </label>
     
-    <label class="me-3 mb-3">
-        Strand
-        <select name="strand_id" id="strand_id" class="form-select form-select-sm">
-            <option value="" selected>------</option>
-            {% for strand in strands %}
-            <option value={{ strand.id }}>{{ strand.name }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    {% endif %}
+        <label class="me-3 mb-3">
+            Semester
+            <select name="semester" class="form-select form-select-sm" id="semester">
+                <option value="" selected>------</option>
+                {% for semester in semesters %}
+                <option value={{ semester }}>{{ semester }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        {% if request.user|in_group:"faculty" %}
+        <label class="me-3 mb-3">
+            Course
+            <select name="course_id" id="course_id" class="form-select form-select-sm">
+                <option value="" selected>------</option>
+                {% for course in courses %}
+                <option value={{ course.id }}>{{ course.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        
+        <label class="me-3 mb-3">
+            Strand
+            <select name="strand_id" id="strand_id" class="form-select form-select-sm">
+                <option value="" selected>------</option>
+                {% for strand in strands %}
+                <option value={{ strand.id }}>{{ strand.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        {% endif %}
+    </div>
 
     {% if request.user|in_group:"guardians" %}
     <input type="hidden" name="student_id" value={{ student.id }}>
     {% endif %}
-    <input type="reset" value="Reset" class="btn btn-sm btn-secondary me-2 mb-3" id="reset">
-    <input type="submit" value="Filter" class="btn btn-sm btn-primary mb-3">
+    <div>
+        <input type="reset" value="Reset" class="btn btn-sm btn-secondary me-2 mb-3" id="reset">
+        <input type="submit" value="Filter" class="btn btn-sm btn-primary mb-3">    
+    </div>
 </form>
 <!--===========================================For Classes================================================-->
 <div class="row gy-4">
