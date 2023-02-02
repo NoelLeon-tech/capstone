@@ -154,7 +154,7 @@ def get_class_attendances(request, class_id):
 
 @login_required
 def get_campus_attendances(request):
-    start_date = request.GET.get("start_date", datetime.date(1, 1, 1).strftime("%Y-%m-%d"))
+    start_date = request.GET.get("start_date", "0001-01-01")
     end_date = request.GET.get("end_date", datetime.datetime.now().strftime("%Y-%m-%d"))
     page_number = request.GET.get("page_number", 1)
 
@@ -185,7 +185,7 @@ def get_campus_attendances(request):
 
 @login_required
 def get_event_attendances(request):
-    start_date = request.GET.get("start_date", datetime.date(1, 1, 1).strftime("%Y-%m-%d"))
+    start_date = request.GET.get("start_date", "0001-01-01")
     end_date = request.GET.get("end_date", datetime.datetime.now().strftime("%Y-%m-%d"))
     page_number = request.GET.get("page_number", 1)
 
