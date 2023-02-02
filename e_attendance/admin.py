@@ -38,7 +38,7 @@ class Custom_User_Admin(UserAdmin):
 @admin.register(Student)
 class Student_Admin(admin.ModelAdmin):
     list_display = ("user_id", "user", "year", "block", "student_type", "course", "strand")
-    # search_fields = ("user__last_name", )
+    search_fields = ("user__last_name", "user__first_name")
     
     def lookup_allowed(self, lookup, value):
         return True
