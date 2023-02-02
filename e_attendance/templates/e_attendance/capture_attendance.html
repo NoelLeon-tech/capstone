@@ -27,7 +27,7 @@ Capture {{ attendance_type|title }} Attendance
 <!-- loading circle -->
 <div id="spinner" style="
         height: 80vh; 
-        display: flex; 
+        display: none; 
         flex-direction: column; 
         align-items: center; 
         justify-content: center;">
@@ -100,6 +100,7 @@ Capture {{ attendance_type|title }} Attendance
     const alertCloseBtn = alert.querySelector(".btn-close")
     alertCloseBtn.onclick = () => alert.style.display = "none"
     
+    const spinner = document.querySelector("#spinner")
     const videoContainer = document.querySelector("#video-container")
     const videoElement = document.querySelector("video")
     const canvasElement = document.querySelector("canvas")
@@ -112,13 +113,14 @@ Capture {{ attendance_type|title }} Attendance
 
     async function start() {
         // Hide the video when loading the images.
+        spinner.style.display = "flex"
         videoContainer.style.display = "none"
         // Load and process the sample images for face recognition.
         labeledFaceDescriptors = await loadImages()
         if (labeledFaceDescriptors.length) {
             faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.4)
         }
-        document.querySelector("#spinner").style.display = "none"
+        spinner.style.display = "none"
         videoContainer.style.display = "flex"
         // Start the device's camera then play the video on the page.
         navigator.mediaDevices.getUserMedia({ video: true, audio: false })
