@@ -350,6 +350,8 @@ def generate_attendance_report(request):
     cls = Class.objects.get(pk=class_id)
 
     file_location = "e_attendance/static/e_attendance/spreadsheets/"
+    # file_location = "/static/e_attendance/spreadsheets/"
+
     filename = ""
     if request.user.groups.filter(name="faculty").exists():
         filename = f"{cls.subject.name}-{cls.course.name if cls.course else cls.strand.name}-{cls.year}-{cls.block}.xlsx"

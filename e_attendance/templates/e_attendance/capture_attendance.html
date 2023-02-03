@@ -84,7 +84,9 @@ Capture {{ attendance_type|title }} Attendance
 <script src="{% static 'e_attendance/js/getCookie.js' %}" type="text/javascript"></script>
 <script>
     // Path to the face recognition models.
-    const MODEL_URL = "../../../static/e_attendance/face_recognition_models"
+    // const MODEL_URL = "../../../static/e_attendance/face_recognition_models"
+    const MODEL_URL = "/static/e_attendance/face_recognition_models"
+
 
     // Load all face recognition models.
     Promise.all([
