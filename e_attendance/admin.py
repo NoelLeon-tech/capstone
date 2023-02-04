@@ -282,17 +282,15 @@ class Class_Attendance_Admin(admin.ModelAdmin):
     list_display = ("id", "class_meeting", "get_student", "time_in", "time_out", "remarks")
     search_fields = (
         "id", 
-        # "class_meeting__cls__subject", 
-        # "class_meeting__cls__faculty__first_name", 
-        # "class_meeting__cls__faculty__last_name",
-        # "class_meeting__course_name",
-        # "class_meeting__start_time",
-        # "class_meeting__end_time",
-        # "get_student__first_name",
-        # "get_student__last_name"
-        # "time_in",
-        # "time_out",
-        # "remarks"
+        "class_meeting__cls__subject__name", 
+        "class_meeting__cls__faculty__first_name", 
+        "class_meeting__cls__faculty__last_name",
+        "class_meeting__cls__course__name",
+        "student__first_name",
+        "student__last_name",
+        "time_in",
+        "time_out",
+        "remarks"
     )
     form = Class_Attendance_Admin_Form
 
@@ -314,7 +312,7 @@ class Campus_Attendance_Admin(admin.ModelAdmin):
     search_fields = ("id", "user__last_name", "user__first_name", "date")
 
 
-#=======================================Faculty Attendance======================================================
+#========================================Faculty Attendance======================================================
 
 class Faculty_Attendance_Admin_Form(forms.ModelForm):
     faculty = forms.ModelChoiceField(queryset=User.objects.filter(groups__name="faculty"))
