@@ -348,7 +348,7 @@ def generate_attendance_report(request):
 
     #ORM Object-Relational Mapping
     cls = Class.objects.get(pk=class_id)
-
+    
     filename = ""
     if request.user.groups.filter(name="faculty").exists():
         filename = f"{cls.subject.name}-{cls.course.name if cls.course else cls.strand.name}-{cls.year}-{cls.block}.xlsx"
@@ -576,13 +576,12 @@ def read_message(request):
     message.save()
     return HttpResponse(status=200)
 
-
+#============================================================================================
 @login_required
 def generate_model_spreadsheet(request):
     model_name = request.GET.get("model_name")
-    file_location = "e_attendance/static/e_attendance/spreadsheets/"
     filename = f"{model_name}.xlsx"
-    workbook = xlsxwriter.Workbook(file_location + filename, {'remove_timezone': True})
+    workbook = xlsxwriter.Workbook(filename, {'remove_timezone': True})
     # h1 = workbook.add_format({"bold": True, "font_size": 16})
     # h2 = workbook.add_format({"bold": True, "font_size": 12})
     bold = workbook.add_format({'bold': True})
@@ -882,11 +881,11 @@ def generate_model_spreadsheet(request):
 
     
     workbook.close()
-    file = open(file_location + filename, "rb")
+    file = open(filename, "rb")
     response = HttpResponse(file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename={filename}'
     file.close()
-    os.remove(file_location + filename)
+    os.remove(filename)
     return response
 
 
