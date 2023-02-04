@@ -314,6 +314,8 @@ class Campus_Attendance_Admin(admin.ModelAdmin):
     search_fields = ("id", "user__last_name", "user__first_name", "date")
 
 
+#=======================================Faculty Attendance======================================================
+
 class Faculty_Attendance_Admin_Form(forms.ModelForm):
     faculty = forms.ModelChoiceField(queryset=User.objects.filter(groups__name="faculty"))
     
@@ -322,7 +324,6 @@ class Faculty_Attendance_Admin_Form(forms.ModelForm):
         fields= "__all__"
 
 
-#=======================================Faculty Attendance======================================================
 @admin.register(Faculty_Attendance)
 class Faculty_Attendance_Admin(admin.ModelAdmin):
     list_display = ("id", "faculty", "time_in", "time_out", "date", "remarks")

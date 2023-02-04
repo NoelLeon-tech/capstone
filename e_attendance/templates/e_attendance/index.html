@@ -6,9 +6,11 @@
 
 {% block body %}
 <div id="div-logo-bg" class="img-fluid">
-    <div id="index-div" class="d-flex align-items-center" style="height: calc(80vh);">
-        {% if request.user|in_group:"students" %}
-        <div class="container row gy-3" style="max-width: 300px; margin-inline: auto;">
+    <div id="index-div" class="d-flex justify-content-center align-items-center" style="height: calc(80vh);">
+    
+        <div id="index-buttons" class="row gy-3">
+            
+            {% if request.user|in_group:"students" %}
             <a href="{% url 'e_attendance:classes' %}" class="btn btn-primary btn-lg">
                 View Class Attendances
             </a>
@@ -18,10 +20,8 @@
             <a href="{% url 'e_attendance:event_attendances' %}" class="btn btn-primary btn-lg">
                 View Event Attendances
             </a>
-        </div>
 
-        {% elif request.user|in_group:"faculty" %}
-        <div id="index-div" class="container row gy-3" style="max-width: 300px; margin-inline: auto;">
+            {% elif request.user|in_group:"faculty" %}
             <a href="{% url 'e_attendance:classes' %}" class="btn btn-primary btn-lg">
                 View Class Attendances
             </a>
@@ -31,10 +31,8 @@
             <a href="{% url 'e_attendance:campus_attendances' %}" class="btn btn-primary btn-lg">
                 View Campus Attendances
             </a>
-        </div>
 
-        {% elif request.user|in_group:"guardians" %}
-        <div class="container row gy-3" style="max-width: 300px; margin-inline: auto;">
+            {% elif request.user|in_group:"guardians" %}
             <button id="view-class-attendances-btn" class="btn btn-primary btn-lg" data-bs-toggle="modal"
                 data-bs-target="#select-student-modal">
                 View Class Attendances
@@ -71,11 +69,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-    
 
-        {% elif request.user|in_group:"admins" %}
-        <div class="container row gy-3" style="max-width: 340px; margin-inline: auto;">
+            {% elif request.user|in_group:"admins" %}
             <a href="{% url 'e_attendance:capture_attendance' %}?attendance_type=campus" class="btn btn-primary btn-lg">
                 Capture Campus Attendance
             </a>
@@ -85,34 +80,34 @@
             <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#select-event-modal">
                 Capture Event Attendance
             </button>
-        </div>
 
-        <!-- Select Event Modal -->
-        <div class="modal fade" id="select-event-modal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5">Select Event</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="{% url 'e_attendance:capture_attendance' %}">
-                            <select name="event_id" class="form-select mb-3" required>
-                                <option value="">--------</option>
-                                {% for event in events %}
-                                <option value={{ event.id }}>{{ event.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <input type="hidden" name="attendance_type" value="event">
-                            <input type="submit" value="Ok" class="btn btn-primary">
-                        </form>
+            <!-- Select Event Modal -->
+            <div class="modal fade" id="select-event-modal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5">Select Event</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{% url 'e_attendance:capture_attendance' %}">
+                                <select name="event_id" class="form-select mb-3" required>
+                                    <option value="">--------</option>
+                                    {% for event in events %}
+                                    <option value={{ event.id }}>{{ event.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" name="attendance_type" value="event">
+                                <input type="submit" value="Ok" class="btn btn-primary">
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>    
-{% endif %}
 <!-- Guardian student selection -->
 <script>
     let viewClassAttendancesBtn = document.querySelector("#view-class-attendances-btn")

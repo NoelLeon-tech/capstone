@@ -22,3 +22,20 @@
 .navbar-toggler-icon > path {
     fill: white;
 }
+
+
+
+@media screen and (min-width: 577px) {
+    #index-buttons {
+        max-width: 360px;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    #index-buttons {
+        max-width: 240px;
+    }
+    #index-buttons>a, #index-buttons>button {
+      font-size: .8rem;
+    }
+  }
