@@ -148,9 +148,9 @@ Capture {{ attendance_type|title }} Attendance
             { name: "Rea M. Garcia", id: 4, groups: ["students"] },
             { name:"Ricky A. Quindara", id:26, groups: ["students"] },
             { name: "migel", id: 45, groups: ["faculty"]},
-            { name: "Richard M. Aquino", id: 46, groups: ["students"]}
+            { name: "Richard M. Aquino", id: 46, groups: ["students"] }
         ]
-        
+
         let attendanceType = document.querySelector("#attendance-type").innerHTML
         if (attendanceType === "faculty") {
             users = users.filter(user => user.groups.includes(attendanceType))
