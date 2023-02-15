@@ -348,6 +348,7 @@ class Event_Attendance_Admin_Form(forms.ModelForm):
 @admin.register(Event_Attendance)
 class Event_Attendance_Admin(admin.ModelAdmin):
     list_display = ("id", "event", "student", "time_in", "time_out", "remarks")
+    search_fields = ("id", "event__name", "student__first_name", "student__last_name")
     form = Event_Attendance_Admin_Form
 ######################### END DJANGO ADMIN MODEL REGISTRATION #########################
 

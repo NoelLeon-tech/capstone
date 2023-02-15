@@ -13,7 +13,7 @@
     <div>
         <label class="me-3 mb-3">
             School Year
-            <select name="school_year" class="form-select form-select-sm" id="school_year">
+            <select name="school_year" class="form-select form-select-sm" id="school_year" required>
                 <option value="" selected>------</option>
                 {% for school_year in school_years %} 
                 <option value={{ school_year }}>{{ school_year }}</option>
@@ -59,10 +59,10 @@
     {% endif %}
     <div>
         <input type="reset" value="Reset" class="btn btn-sm btn-secondary me-2 mb-3" id="reset">
-        <input type="submit" value="Filter" class="btn btn-sm btn-primary mb-3">    
+        <input type="submit" value="Ok" class="btn btn-sm btn-primary mb-3">    
     </div>
 </form>
-<!--===========================================For Classes================================================-->
+<!--=========================================== Classes ================================================-->
 <div class="row gy-4">
     {% if request.user|in_group:"students" %}
     {% for class_student in class_students %}
@@ -192,7 +192,7 @@
         })
     }
 
-    // Reset the filters when the reset button is clicked.
+    // Reset 
     document.querySelector("#reset").onclick = () => {
         let studentId = searchParams.get("student_id")
         if (studentId)
