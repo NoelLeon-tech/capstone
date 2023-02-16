@@ -34,10 +34,11 @@ def index(request):
         return render(request, "e_attendance/index.html")
 
 
+#============================================= Classes ==========================================================
 @login_required
 def view_classes(request):
     context = {}
-    # Get form data
+    
     school_year = request.GET.get("school_year") 
     semester = request.GET.get("semester")
     course_id = request.GET.get("course_id")
@@ -105,7 +106,6 @@ def get_class_attendances(request, class_id):
     page_number = request.GET.get("page_number", 1)
     cls = Class.objects.get(pk=class_id)
 
-    # Check if the logged in user is a student.
     if request.user.groups.filter(name="students").exists():
         class_attendances = Class_Attendance.objects.filter(
             student=request.user, 

@@ -13,7 +13,7 @@
     <div>
         <label class="me-3 mb-3">
             School Year
-            <select name="school_year" class="form-select form-select-sm" id="school_year" required>
+            <select name="school_year" class="form-select form-select-sm" id="school_year">
                 <option value="" selected>------</option>
                 {% for school_year in school_years %} 
                 <option value={{ school_year }}>{{ school_year }}</option>
@@ -58,7 +58,7 @@
     <input type="hidden" name="student_id" value={{ student.id }}>
     {% endif %}
     <div>
-        <input type="reset" value="Reset" class="btn btn-sm btn-secondary me-2 mb-3" id="reset">
+        <input type="reset" value="Clear" class="btn btn-sm btn-secondary me-2 mb-3" id="reset">
         <input type="submit" value="Ok" class="btn btn-sm btn-primary mb-3">    
     </div>
 </form>
@@ -141,11 +141,11 @@
                 <div class="text-muted">School Year: {{ class_student.cls.school_year }}</div>
                 <div class="text-muted mb-3">Semester: {{ class_student.cls.semester }}</div>
                 {% if class_student.cls.course %}
-                <!-- <div class="text-muted mb-3">Course: {{ class_student.cls.course.name }}</div>
+                <div class="text-muted mb-3">Course: {{ class_student.cls.course.name }}</div>
                 {% else %}
                 <div class="text-muted mb-3">Strand: {{ class_student.cls.strand.name }}</div>
                 {% endif %}
-                <div class="mb-3">Attended by: {{ class_student.student.first_name }}</div> -->
+                <div class="mb-3">Attended by: {{ class_student.student.first_name }}</div>
                 <a href="{% url 'e_attendance:class_attendances' class_id=class_student.cls_id %}?student_id={{ class_student.student_id }}"
                     class="btn btn-sm btn-primary mt-auto">
                     View attendances
@@ -166,8 +166,6 @@
     // Get the search parameters from the url.
     searchParams = url.searchParams
 
-    // For each search parameter, set the corresponding select element's value
-    // to the value of that search parameter.
     document.querySelector("#school_year").value = searchParams.get("school_year") ? searchParams.get("school_year") : ""
     document.querySelector("#semester").value = searchParams.get("semester") ? searchParams.get("semester") : ""
 
@@ -177,12 +175,10 @@
     if (courseId && strandId) {
         courseId.value = searchParams.get("course_id") ? searchParams.get("course_id") : ""
         strandId.value = searchParams.get("strand_id") ? searchParams.get("strand_id") : ""  
-        // Disable the strand select element if the course select element's value
-        // is not empty and vice versa.
+       
         strandId.disabled = courseId.value !== ""
         courseId.disabled = strandId.value !== ""
 
-        // Same as above but this will run whenever the values of those two select elements change.
         courseId.addEventListener("change", () => {
             strandId.disabled = courseId.value !== ""
         })

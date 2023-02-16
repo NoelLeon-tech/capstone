@@ -50,7 +50,7 @@
             <input type="hidden" name="student_id" value="{{ student.id }}">
             {% endif %}
             <div>
-                <input type="reset" value="Reset" class="btn btn-sm btn-secondary">
+                <input type="reset" value="Clear" class="btn btn-sm btn-secondary">
                 <input type="submit" value="Ok" class="btn btn-sm btn-primary">    
             </div>
         </form>
@@ -63,33 +63,7 @@
                 class="btn btn-primary me-2">
                 Generate Attendance Report
             </a>
-            <!--Generate Attendance Report Modal-->
-            <!-- <div class="modal fade" id="generate-attendance-report-modal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5">Generate Attendance Report</h1>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form action="{% url 'e_attendance:generate_attendance_report' %}" class="mb-3 text-center">
-                                    <h5>Select date range</h5>
-                                    <label>
-                                        Start date
-                                        <input type="date" name="start_date" class="form-control form-control-sm" required>
-                                    </label>
-                                    <label>
-                                        End date
-                                        <input type="date" name="end_date" class="form-control form-control-sm" required>
-                                    </label>
-                                    <input type="hidden" name="class_id" value="{{ class.id }}">
-                                    <input type="submit" value="Ok" class="btn btn-sm btn-primary">
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
-
+            
             <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#create-attendance-qr-modal">
                 Create QR Code
             </button>
@@ -174,6 +148,10 @@
                 </div>
             </div>
         </div>
+        {% empty %}
+            <tr>
+               <td colspan="9">No Class Meeting.</td>
+            </tr>
         {% endfor %}
     </div>
     <!-- Student/Guardian -->
@@ -217,7 +195,9 @@
 <nav>
     <ul class="pagination mt-3 justify-content-center">
         {% if page.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page_number=1">First</a></li>
+        <li class="page-item">
+            <a class="page-link" href="?page_number=1">First</a>
+        </li>
         <li class="page-item">
             <a class="page-link" href="?page_number={{ page.previous_page_number }}">Previous</a>
         </li>
