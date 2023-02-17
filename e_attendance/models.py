@@ -9,7 +9,7 @@ class User(AbstractUser):
     address = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.id} {self.first_name} {self.last_name}"
+        return f"({self.id}) {self.first_name} {self.last_name}"
     
 
 class Student(models.Model):

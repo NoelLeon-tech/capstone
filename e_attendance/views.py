@@ -493,8 +493,6 @@ def capture_attendance(request):
 def load_messages(request):
     contacts = {}
     if request.user.groups.filter(name="guardians").exists():
-        # To get all the students under a guardian, we query the Student_Guardian table
-        # and filter it where the guardian is equal to the logged in user.
         student_guardians = Student_Guardian.objects.filter(guardian=request.user)
         # Iterate through the students under the guardian.
         for student_guardian in student_guardians:
@@ -509,7 +507,7 @@ def load_messages(request):
                     subject = cls.subject.name
                     if subject in contacts[faculty_id]["subjects"]:
                         contacts[faculty_id]["subjects"][subject].append(student_name)
-                    # If the subject is not in the theacher's subjects dict, add it.
+                    # If the subject is not in the teacher's subjects dict, add it.
                     else:
                         contacts[faculty_id]["subjects"][subject] = [student_name]
                 # If the class's faculty is not in the contacts dict, add it.
