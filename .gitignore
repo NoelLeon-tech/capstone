@@ -2,3 +2,5 @@
 venv/
 e_attendance/management/commands/wew.py
 e_attendance/static/e_attendance/images/qr_codes
+e_attendance/management/commands/fuck.py
+readme.md
