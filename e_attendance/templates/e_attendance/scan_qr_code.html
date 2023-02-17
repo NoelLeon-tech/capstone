@@ -13,7 +13,6 @@
         // This function will run when a QR code is detected.
         function onScanSuccess(decodedText) {
             document.querySelector("#html5-qrcode-button-camera-stop").click();
-            // Make a POST request to the url inside the QR code.
             let obj = JSON.parse(decodedText);
             options = {
                 method: "POST",

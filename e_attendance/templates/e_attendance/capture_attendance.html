@@ -114,7 +114,7 @@ Capture {{ attendance_type|title }} Attendance
     let faceMatcher
 
     async function start() {
-        // Hide the video when loading the images.
+        // Show loading hide container
         spinner.style.display = "flex"
         videoContainer.style.display = "none"
         // Load and process the sample images for face recognition.
@@ -161,10 +161,10 @@ Capture {{ attendance_type|title }} Attendance
         
         let labeledFaceDescriptors = JSON.parse(localStorage.getItem("labeledFaceDescriptors"))
         if (labeledFaceDescriptors === null) {
-            localStorage.setItem("labeledFaceDescriptors", JSON.stringify([]))
             labeledFaceDescriptors = []
         }
-        let promises = Promise.all(
+        
+        let promises = await Promise.all(
             users.map(async user => {
                 let labeledFaceDescriptor = labeledFaceDescriptors.find(item => item.label === user.name + "," + user.id)
                 if (labeledFaceDescriptor) {
@@ -189,7 +189,7 @@ Capture {{ attendance_type|title }} Attendance
                 }
             })
         )
-
+        
         localStorage.setItem("labeledFaceDescriptors", JSON.stringify(labeledFaceDescriptors))
         return promises
     }

@@ -18,17 +18,17 @@ def get_semesters(classes=None, class_students=None):
         return sorted(class_students.values_list("cls__semester", flat=True).distinct())
 
 
-def get_courses(classes=None, class_students=None):
-    course_ids = set()
-    if classes:
-        # SELECT DISTINCT course_id from classes
-        course_ids = set(classes.values_list("course_id", flat=True).distinct()) 
-    elif class_students:
-        course_ids = set(class_students.values_list("cls__course_id", flat=True).distinct())
-        
-    while None in course_ids:
-        course_ids.discard(None)
-    return [Course.objects.get(pk=course_id) for course_id in course_ids]
+def get_courses(classes):
+    # SELECT DISTINCT course_id from classes
+    course_ids = classes.values_list("course_id", flat=True).distinct() 
+    # elif class_students:
+    #     course_ids = set(class_students.values_list("cls__course_id", flat=True).distinct())
+    
+    courses = []
+    for course_id in course_ids:
+        if course_id:
+            courses.append(Course.objects.get(pk=course_id))
+    return courses
 
 
 def get_strands(classes=None, class_students=None):   
