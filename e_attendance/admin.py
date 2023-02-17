@@ -14,6 +14,7 @@ admin.site.site_title = "E-Attendance"
 @admin.register(User)
 class Custom_User_Admin(UserAdmin):
     list_display = ["id", "username", "first_name", "middle_name", "last_name", "get_groups"]
+    search_fields = ("id", "username", "first_name", "middle_name", "last_name")
     fieldsets = [
         (None, {'fields': ('username', 'password')}),
         ('Personal info', {'fields': ('first_name', 'middle_name', 'last_name', 'address', 'email')}),
@@ -34,15 +35,14 @@ class Custom_User_Admin(UserAdmin):
         return ", ".join(groups)
     get_groups.short_description = "Groups"
 
-
 #==============================================Student===========================================================
 @admin.register(Student)
 class Student_Admin(admin.ModelAdmin):
-    list_display = ("user_id", "user", "year", "block", "student_type", "course", "strand")
+    list_display = ("user", "year", "block", "student_type", "course", "strand")
     search_fields = ("user__last_name", "user__first_name", "user__id")
     
-    def lookup_allowed(self, lookup, value):
-        return True
+    # def lookup_allowed(self, lookup, value):
+    #     return True
 
 
 @admin.register(Faculty)
@@ -348,6 +348,7 @@ class Event_Attendance_Admin_Form(forms.ModelForm):
 @admin.register(Event_Attendance)
 class Event_Attendance_Admin(admin.ModelAdmin):
     list_display = ("id", "event", "student", "time_in", "time_out", "remarks")
+    search_fields = ("id", "event__name", "student__first_name", "student__last_name")
     form = Event_Attendance_Admin_Form
 ######################### END DJANGO ADMIN MODEL REGISTRATION #########################
 

@@ -9,7 +9,7 @@ class User(AbstractUser):
     address = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"({self.id}) {self.first_name} {self.last_name}"
     
 
 class Student(models.Model):
@@ -37,7 +37,7 @@ class Student(models.Model):
     block = models.IntegerField()
 
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name}"
+        return f"{self.user.first_name} {self.user.first_name}"
 
 
 class Faculty(models.Model):
@@ -115,7 +115,7 @@ class Class(models.Model):
     total_hours = models.IntegerField()
 
     def __str__(self):
-        return f"{self.subject} - {self.faculty}, {self.course if self.course else self.strand}"
+        return f"Block {self.block} - {self.subject} - {self.faculty}, {self.course if self.course else self.strand}"
 
     class Meta:
         verbose_name_plural  =  "Classes"

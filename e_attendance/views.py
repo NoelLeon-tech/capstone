@@ -34,10 +34,11 @@ def index(request):
         return render(request, "e_attendance/index.html")
 
 
+#============================================= Classes ==========================================================
 @login_required
 def view_classes(request):
     context = {}
-    # Get form data
+    
     school_year = request.GET.get("school_year") 
     semester = request.GET.get("semester")
     course_id = request.GET.get("course_id")
@@ -97,7 +98,7 @@ def view_classes(request):
 
     return render(request, "e_attendance/classes.html", context=context)
 
-
+#======================================== Class Attendance=======================================================
 @login_required
 def get_class_attendances(request, class_id):
     start_date = request.GET.get("start_date", "0001-01-01")
@@ -105,7 +106,6 @@ def get_class_attendances(request, class_id):
     page_number = request.GET.get("page_number", 1)
     cls = Class.objects.get(pk=class_id)
 
-    # Check if the logged in user is a student.
     if request.user.groups.filter(name="students").exists():
         class_attendances = Class_Attendance.objects.filter(
             student=request.user, 
@@ -152,6 +152,7 @@ def get_class_attendances(request, class_id):
         })
 
 
+#=========================================Campus Attendance====================================================
 @login_required
 def get_campus_attendances(request):
     start_date = request.GET.get("start_date", "0001-01-01")
@@ -183,6 +184,7 @@ def get_campus_attendances(request):
         })
 
 
+#=====================================Event Attendance========================================================
 @login_required
 def get_event_attendances(request):
     start_date = request.GET.get("start_date", "0001-01-01")
@@ -214,6 +216,7 @@ def get_event_attendances(request):
         })
 
 
+#==================================Faculty Attendance======================================================
 @login_required
 def get_faculty_attendances(request):
     start_date = request.GET.get("start_date", "0001-01-01")
@@ -241,13 +244,10 @@ def scan_qr_code(request):
         data = json.loads(request.body)
         class_meeting = Class_Meeting.objects.get(pk=data.get("class_meeting_id"))
         cls = class_meeting.cls
-        # Get current date and time.
         now = datetime.datetime.now()
         
         class_attendance = None
 
-        # If the student already has an attendance record for the class meeting, it means
-        # they already timed in and they're about to time out.
         if Class_Attendance.objects.filter(class_meeting=class_meeting, student=request.user).exists():
             class_attendance = Class_Attendance.objects.get(class_meeting=class_meeting, student=request.user)
             # If the student already timed out, display an error.
@@ -258,7 +258,7 @@ def scan_qr_code(request):
                     f"You have already timed out."
                 )
                 return HttpResponse(status=400)
-            # Else, save the student's time out.
+            # save the student's time out.
             else: 
                 class_attendance.time_out = now.time()
                 class_attendance.save()
@@ -301,9 +301,9 @@ def scan_qr_code(request):
                     f"You successfully timed in the class '{cls.subject.name}' today, {now.strftime('%b %d, %Y, %I:%M %p')}"
                 )
                 return JsonResponse({"class_id": cls.id}, status=201)    
-##############################################################################################
 
-################################ Functions specific to faculty #################################    
+
+####################################### Functions specific to faculty ##########################################    
 @login_required
 def create_class_meeting_qr_code(request):
     class_id = request.POST.get("class_id")
@@ -339,14 +339,12 @@ def create_class_meeting_qr_code(request):
         "class": class_meeting.cls,
         "filename": filename
     })
-# ========================================================================================================    
+# ======================================= Generate Attendance Report ====================================================    
 @login_required
 def generate_attendance_report(request):
     class_id = request.GET.get("class_id")
-    # start_date = request.GET.get("start_date", datetime.date(1, 1, 1).strftime("%Y-%m-%d"))
-    # end_date = request.GET.get("end_date", datetime.datetime.now().strftime("%Y-%m-%d"))
 
-    #ORM Object-Relational Mapping
+    #Object-Relational Mapping
     cls = Class.objects.get(pk=class_id)
     
     filename = ""
@@ -362,7 +360,6 @@ def generate_attendance_report(request):
         worksheet.write(2, 0, f"Course/Strand: {cls.course.name if cls.course else cls.strand.name}", h2)
         worksheet.write(3, 0, f"Year/Grade: {cls.year}", h2)
         worksheet.write(4, 0, f"Block: {cls.block}", h2)
-        # worksheet.write(5, 0, f"From: {start_date} to {end_date}", h2)
         worksheet.write(
             5, 
             0, 
@@ -417,7 +414,7 @@ def generate_attendance_report(request):
     os.remove(filename)
     return response
 
-# =========================================================================================================
+# ======================================= Capture Attendance ======================================================
 def capture_attendance(request):
     if request.method == "GET":
         context = {"attendance_type": request.GET.get("attendance_type")}
@@ -493,13 +490,11 @@ def capture_attendance(request):
                 )
                 return HttpResponse(f"Successfully timed in at {now.strftime('%b %d, %Y, %I:%M %p')}")
                 
-#===========================================================================================================
+#========================================== Load Messages ========================================================
 @login_required
 def load_messages(request):
     contacts = {}
     if request.user.groups.filter(name="guardians").exists():
-        # To get all the students under a guardian, we query the Student_Guardian table
-        # and filter it where the guardian is equal to the logged in user.
         student_guardians = Student_Guardian.objects.filter(guardian=request.user)
         # Iterate through the students under the guardian.
         for student_guardian in student_guardians:
@@ -514,7 +509,7 @@ def load_messages(request):
                     subject = cls.subject.name
                     if subject in contacts[faculty_id]["subjects"]:
                         contacts[faculty_id]["subjects"][subject].append(student_name)
-                    # If the subject is not in the theacher's subjects dict, add it.
+                    # If the subject is not in the teacher's subjects dict, add it.
                     else:
                         contacts[faculty_id]["subjects"][subject] = [student_name]
                 # If the class's faculty is not in the contacts dict, add it.
@@ -549,7 +544,7 @@ def load_messages(request):
                         }
     return render(request, "e_attendance/messages.html", {"contacts": contacts})
 
-# ==============================================================================================================
+# ======================================== Get, Send and Read Messages =======================================================
 @login_required
 def get_messages(request, contact_id):
     contact = User.objects.get(pk=contact_id)
@@ -578,7 +573,7 @@ def read_message(request):
     message.save()
     return HttpResponse(status=200)
 
-#============================================================================================
+#======================================= Generate Model Spreadsheet =============================================
 @login_required
 def generate_model_spreadsheet(request):
     model_name = request.GET.get("model_name")
@@ -600,7 +595,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, user in enumerate(User.objects.all()):
+        for i, user in enumerate(User.objects.all().order_by("-id")):
             user = user.__dict__
             for j, field in enumerate(fields):
                 if field == "date_joined" or field == "last_login":
@@ -619,7 +614,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, cls in enumerate(Class.objects.all()):
+        for i, cls in enumerate(Class.objects.all().order_by("-id")):
             cls = cls.__dict__
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, cls.get(field))
@@ -650,7 +645,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, course in enumerate(Course.objects.all()):
+        for i, course in enumerate(Course.objects.all().order_by("-id")):
             course = course.__dict__  
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, course.get(field))
@@ -665,7 +660,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, track in enumerate(Track.objects.all()):
+        for i, track in enumerate(Track.objects.all().order_by("-id")):
             track = track.__dict__
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, track.get(field))
@@ -680,7 +675,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, subject in enumerate(Subject.objects.all()):
+        for i, subject in enumerate(Subject.objects.all().order_by("-id")):
             subject = subject.__dict__
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, subject.get(field))
@@ -700,7 +695,7 @@ def generate_model_spreadsheet(request):
             else:
                 worksheet.write(0, i + 2, field, bold)
 
-        for i, student in enumerate(Student.objects.all()):
+        for i, student in enumerate(Student.objects.all().order_by("-id")):
             student = student.__dict__
             user = User.objects.get(pk=student.get("user_id"))
             worksheet.write(i + 1, 1, user.last_name)
@@ -725,7 +720,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
            worksheet.write(0, i, field, bold)
 
-        for i, student_guardian in enumerate(Student_Guardian.objects.all()):
+        for i, student_guardian in enumerate(Student_Guardian.objects.all().order_by("-id")):
             student_guardian = student_guardian.__dict__
             for j, field in enumerate(fields):
                 if field == "student" or field == "guardian":
@@ -744,7 +739,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, strand in enumerate(Strand.objects.all()):
+        for i, strand in enumerate(Strand.objects.all().order_by("-id")):
             strand = strand.__dict__  
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, strand.get(field))
@@ -758,7 +753,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, message in enumerate(Message.objects.all()):
+        for i, message in enumerate(Message.objects.all().order_by("-id")):
             message = message.__dict__
             for j, field in enumerate(fields):
                 if field == "sender" or field == "receiver":
@@ -778,7 +773,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, faculty_attendance in enumerate(Faculty_Attendance.objects.all()):
+        for i, faculty_attendance in enumerate(Faculty_Attendance.objects.all().order_by("-id")):
             faculty_attendance = faculty_attendance.__dict__
             for j, field in enumerate(fields):
                 if field == "faculty":
@@ -807,7 +802,7 @@ def generate_model_spreadsheet(request):
             else:
                 worksheet.write(0, i + 2, field, bold)
 
-        for i, faculty in enumerate(Faculty.objects.all()):
+        for i, faculty in enumerate(Faculty.objects.all().order_by("-id")):
             faculty = faculty.__dict__
             user = User.objects.get(pk=faculty.get("user_id"))
             worksheet.write(i + 1, 1, user.last_name)
@@ -830,7 +825,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, event in enumerate(Event.objects.all()):
+        for i, event in enumerate(Event.objects.all().order_by("-id")):
             event = event.__dict__
             for j, field in enumerate(fields):
                 if field == "start_time" or field == "end_time":
@@ -850,7 +845,7 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, event_attendance in enumerate(Event_Attendance.objects.all()):
+        for i, event_attendance in enumerate(Event_Attendance.objects.all().order_by("-id")):
             event_attendance = event_attendance.__dict__
             for j, field in enumerate(fields):
                 if field == "event":
@@ -865,6 +860,7 @@ def generate_model_spreadsheet(request):
                 else:
                     worksheet.write(i + 1, j, event_attendance.get(field))
 
+
     elif model_name == "department":
         fields = []
         for field in Department._meta.get_fields():
@@ -874,12 +870,91 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, department in enumerate(Department.objects.all()):
+        for i, department in enumerate(Department.objects.all().order_by("-id")):
             department = department.__dict__
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, department.get(field))
 
-    worksheet.set_column(0, 20, 15)
+        
+    elif model_name == "campus_attendance":
+        fields = []
+        for field in Campus_Attendance._meta.get_fields():
+            fields.append(field.name)
+
+        for i, field in enumerate(fields):
+            worksheet.write(0, i, field, bold)
+
+        for i, campus_attendance in enumerate(Campus_Attendance.objects.all().order_by("-id")):
+            campus_attendance = campus_attendance.__dict__
+            for j, field in enumerate(fields):
+                if field == "user":
+                    user = User.objects.get(pk=campus_attendance.get(field + "_id"))
+                    worksheet.write(i + 1, j, f"{user.last_name}, {user.first_name}")
+                elif field == "time_in" or field == "time_out":
+                    if campus_attendance.get(field):
+                        worksheet.write(i + 1, j, campus_attendance.get(field).strftime("%I:%M %p"))
+                elif field == "date":
+                    worksheet.write(i + 1, j, campus_attendance.get(field).strftime("%Y-%m-%d"))
+                else:
+                    worksheet.write(i + 1, j, campus_attendance.get(field))
+
+
+    elif model_name == "class_student":
+        fields = []
+        for field in Class_Student._meta.get_fields():
+            fields.append(field.name)
+
+        for i, field in enumerate(fields):
+            worksheet.write(0, i, field, bold)
+
+        for i, class_student in enumerate(Class_Student.objects.all().order_by("-id")):
+            class_student = class_student.__dict__
+            for j, field in enumerate(fields):
+                if field == "cls":
+                    cls = Class.objects.get(pk=class_student.get(field + "_id"))
+                    if cls.course:
+                        worksheet.write(i + 1, j, f"{cls.subject}, {cls.faculty}, {cls.course}")
+                    else:
+                        worksheet.write(i + 1, j, f"{cls.subject}, {cls.faculty}, {cls.strand}")
+                elif field == "student":
+                    user = User.objects.get(pk=class_student.get(field + "_id"))
+                    worksheet.write(i + 1, j, f"{user.last_name}, {user.first_name}")
+                else:
+                    worksheet.write(i + 1, j, class_student.get(field))
+
+
+    elif model_name == "class_meeting":
+        fields = []
+        for field in Class_Meeting._meta.get_fields():
+            fields.append(field.name)
+
+        fields.remove("class_attendance")
+
+        for i, field in enumerate(fields):
+            if field == "cls":
+                worksheet.write(0, i, "class", bold)
+            else:    
+                worksheet.write(0, i, field, bold)
+
+        for i, class_meeting in enumerate(Class_Meeting.objects.all().order_by("-id")):
+            class_meeting = class_meeting.__dict__
+            for j, field in enumerate(fields):
+                if field == "cls":
+                    cls = Class.objects.get(pk=class_meeting.get(field + "_id"))
+                    if cls.course:
+                        worksheet.write(i + 1, j, f"{cls.subject}, {cls.faculty}, {cls.course}")
+                    else:
+                        worksheet.write(i + 1, j, f"{cls.subject}, {cls.faculty}, {cls.strand}")
+                elif field == "start_time" or field == "end_time":
+                    if class_meeting.get(field):
+                        worksheet.write(i + 1, j, class_meeting.get(field).strftime("%I:%M %p"))
+
+                elif field == "date":
+                    worksheet.write(i + 1, j, class_meeting.get(field).strftime("%Y-%m-%d"))
+                else:
+                    worksheet.write(i + 1, j, class_meeting.get(field))
+
+
     
     workbook.close()
     file = open(filename, "rb")
@@ -890,6 +965,7 @@ def generate_model_spreadsheet(request):
     return response
 
 
+#============================================== Logout ==========================================================
 def logout_view(request):
     logout(request)
     return redirect(reverse("login"))

@@ -1,3 +1,4 @@
 **__pycache__/
 venv/
-e_attendance/management/
+e_attendance/management/commands/wew.py
+e_attendance/static/e_attendance/images/qr_codes
