@@ -406,6 +406,8 @@ def generate_attendance_report(request):
             worksheet.write(row, 4, "Yes" if (hours_absent + hours_late) >= (cls.total_hours * .2) else "No")
             row += 1
 
+            worksheet.set_column(0, 20, 18)
+
         workbook.close()
 
     file = open(filename, "rb")
@@ -877,8 +879,7 @@ def generate_model_spreadsheet(request):
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, department.get(field))
 
-            
-
+    worksheet.set_column(0, 20, 15)
     
     workbook.close()
     file = open(filename, "rb")

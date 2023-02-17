@@ -63,25 +63,52 @@
     </table>
 </div>
 
+
 {% if page.paginator.num_pages > 1 %}
 <nav>
     <ul class="pagination mt-3 justify-content-center">
         {% if page.has_previous %}
+        
+        {% if request.user|in_group:"guardians" %}
+        <li class="page-item">
+            <a class="page-link" id="first">First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" id="previous" data-page-num="{{ page.previous_page_number }}">
+                Previous
+            </a>
+        </li>
+        {% else %}
         <li class="page-item"><a class="page-link" href="?page_number=1">First</a></li>
         <li class="page-item">
             <a class="page-link" href="?page_number={{ page.previous_page_number }}">Previous</a>
         </li>
         {% endif %}
+        
+        {% endif %}
         <small class="mx-2 align-self-center">
             Page {{ page.number }} of {{ page.paginator.num_pages }}
         </small>
         {% if page.has_next %}
+
+        {% if request.user|in_group:"guardians" %}
+        <li class="page-item">
+            <a id="next" class="page-link" data-page-num="{{ page.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" id="last" data-page-num="{{ page.paginator.num_pages }}">
+                Last
+            </a>
+        </li>
+        {% else %}
         <li class="page-item">
             <a class="page-link" href="?page_number={{ page.next_page_number }}">Next</a>
         </li>
         <li class="page-item">
             <a class="page-link" href="?page_number={{ page.paginator.num_pages }}">Last</a>
         </li>
+        {% endif %}
+
         {% endif %}
     </ul>
 </nav>
@@ -93,16 +120,70 @@
     const resetBtn = document.querySelector("input[type='reset']")
     let searchParams = new URL(location.href).searchParams
 
+    // for filter form
+
     startDateInput.value = searchParams.get("start_date")
     endDateInput.value = searchParams.get("end_date")
 
     resetBtn.onclick = () => {
         let studentId = searchParams.get("student_id")
+        // for guardian
         if (studentId) {
             location.href = location.origin + location.pathname + `?student_id=${studentId}`
         }
+        // for student
         else {
             location.href = location.origin + location.pathname
+        }
+    }
+
+    // for guardian's pagination
+
+    const url = new URL(location.origin + location.pathname)
+    
+    firstPageBtn = document.querySelector("#first")
+    previousPageBtn = document.querySelector("#previous")
+    nextPageBtn = document.querySelector("#next")
+    lastPageBtn = document.querySelector("#last")
+    
+    
+    if (searchParams.get("start_date")) {
+        url.searchParams.append("start_date", searchParams.get("start_date"))
+    }
+    if (searchParams.get("end_date")) {
+        url.searchParams.append("end_date", searchParams.get("end_date"))
+    }
+    if (searchParams.get("student_id")) {
+        url.searchParams.append("student_id", searchParams.get("student_id"))
+    }
+
+
+    if (firstPageBtn) {
+        firstPageBtn.onclick = (e) => {
+            e.preventDefault()
+            url.searchParams.append("page_number", 1)
+            location.href = url
+        }
+    }
+    if (previousPageBtn) {
+        previousPageBtn.onclick = (e) => {
+            e.preventDefault()
+            url.searchParams.append("page_number", previousPageBtn.dataset.pageNum)
+            location.href = url
+        }
+    }
+    if (nextPageBtn) {
+        nextPageBtn.onclick = (e) => {
+            e.preventDefault()
+            url.searchParams.append("page_number", nextPageBtn.dataset.pageNum)
+            location.href = url
+        }
+    }
+    if (lastPageBtn) {
+        lastPageBtn.onclick = (e) => {
+            e.preventDefault()
+            url.searchParams.append("page_number", lastPageBtn.dataset.pageNum)
+            location.href = url
         }
     }
 </script>
