@@ -17,8 +17,8 @@
     {% endif %}
 </div>
 
-<form action="{% url 'e_attendance:event_attendances' %}" class="mb-3 d-flex flex-wrap align-items-end">
-    <div class="me-3 mb-3">
+<form action="{% url 'e_attendance:event_attendances' %}" class="mb-3">
+    <div class="mb-3">
         <h5>Filter result by date range</h5>
         <label>
             Start date
@@ -29,7 +29,7 @@
             <input type="date" name="end_date" class="form-control form-control-sm" required>
         </label>
     </div>
-    <div class="mb-3">
+    <div>
         {% if request.user|in_group:"guardians" %}
         <input type="hidden" name="student_id" value="{{ student.id }}">
         {% endif %}
