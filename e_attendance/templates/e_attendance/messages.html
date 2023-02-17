@@ -121,8 +121,7 @@
         }
     }
 
-    // Function for getting the messages where the sender or receiver is
-    // the contact clicked from the contacts panel.
+   
     async function getMessages(contactId) {
         const response = await fetch(`/get_messages/${contactId}`);
         const messages = await response.json()
@@ -185,7 +184,7 @@
             })
         })
         const message = await response.json();
-        // The code below is just about creating an html element for the message
+        // creating an html element for the message
         // then adding it to the messages window.
         let messageCard = document.createElement("div");
         messageCard.classList.add("card", "text-bg-primary", "mb-2", "message");

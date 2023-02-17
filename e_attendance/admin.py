@@ -202,7 +202,6 @@ class Student_Guardian_Admin(admin.ModelAdmin):
     )
 
     
-
     def get_student(self, obj):
         url = f'{reverse("admin:e_attendance_student_changelist")}?user_id={obj.student.id}'
         return format_html('<a href="{}">{}</a>', url, obj.student)
