@@ -58,7 +58,7 @@ def view_classes(request):
 
     # Faculty
     elif request.user.groups.filter(name="faculty").exists():
-        classes = request.user.handled_classes.all()
+        classes = request.user.handled_classes.all().order_by("-school_year")
         context = {
             "classes": filter_classes(
                 classes=classes, 
@@ -406,7 +406,7 @@ def generate_attendance_report(request):
             worksheet.set_column(0, 20, 18)
 
         workbook.close()
-
+                        # read file
     file = open(filename, "rb")
     response = HttpResponse(file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename={filename}'

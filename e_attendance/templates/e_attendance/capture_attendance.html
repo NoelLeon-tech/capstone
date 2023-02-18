@@ -197,7 +197,7 @@ Capture {{ attendance_type|title }} Attendance
     let displaySize
 
     function resizeCanvas() {
-        // Get the dimensions of the video element.
+        // dimensions of the video element.
         displaySize = { width: videoElement.clientWidth, height: videoElement.clientHeight }
         // Resize the canvas to the video's dimensions.
         faceapi.matchDimensions(canvasElement, displaySize)
@@ -205,18 +205,18 @@ Capture {{ attendance_type|title }} Attendance
     ///////////////////////////////////// EVENT LISTENERS ///////////////////////////////////////////////
 
     let interval
-    // This function will run when the video from camera starts showing up.
+    // will run when the video from camera starts showing up.
     // Or the "Play video" button is pressed.
     videoElement.addEventListener("play", async () => {
         videoBtn.innerHTML = "Pause"
 
-        // This function will run every 0.25 secs.
+        // run every 0.25 secs.
         interval = setInterval(async () => {
 
             // Detect face in the video.
             const detections = await faceapi.detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor()
 
-            // Resize the detection box in case the displayed video has a different size than the original.
+            // in case the displayed video has a different size than the original.
             const resizedDetections = faceapi.resizeResults(detections, displaySize)
 
             // To match the detected face against the sample images.   to compare and match faces
@@ -243,7 +243,7 @@ Capture {{ attendance_type|title }} Attendance
     })
 
 
-    // This function will run if the video is paused.
+    // will run if the video is paused.
     videoElement.addEventListener("pause", () => {
         clearInterval(interval)
         videoBtn.innerHTML = "Play"
