@@ -13,16 +13,18 @@ admin.site.site_title = "E-Attendance"
 ######################### START DJANGO ADMIN MODEL REGISTRATION #########################
 @admin.register(User)
 class Custom_User_Admin(UserAdmin):
-    list_display = ["id", "username", "first_name", "middle_name", "last_name", "get_groups"]
-    search_fields = ("id", "username", "first_name", "middle_name", "last_name")
+    list_display = ["id", "user_id", "first_name", "middle_name", "last_name", "get_groups"]
+    search_fields = ("id", "user_id", "first_name", "middle_name", "last_name", "groups__name")
     fieldsets = [
-        (None, {'fields': ('username', 'password')}),
+        # (None, {'fields': ('username', 'password')}),
+        (None, {'fields': ('user_id', 'password')}),
         ('Personal info', {'fields': ('first_name', 'middle_name', 'last_name', 'address', 'email')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     ]
     add_fieldsets = [
-        (None, {'fields': ('username', 'password1', 'password2')}),
+        # (None, {'fields': ('username', 'password1', 'password2')}),
+        (None, {'fields': ('user_id', 'password1', 'password2')}),
         ('Personal info', {'fields': ('first_name', 'middle_name', 'last_name', 'address', 'email')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
@@ -38,9 +40,21 @@ class Custom_User_Admin(UserAdmin):
 #==============================================Student===========================================================
 @admin.register(Student)
 class Student_Admin(admin.ModelAdmin):
-    list_display = ("user", "year", "block", "student_type", "course", "strand")
-    search_fields = ("user__last_name", "user__first_name", "user__id")
+    list_display = ("get_user_id", "get_user_last_name", "get_user_first_name", "year", "block", "student_type", "course", "strand")
+    search_fields = ("user__last_name", "user__first_name", "user__user_id")
     
+    def get_user_id(self, obj):
+        return obj.user.user_id
+    get_user_id.short_description = 'user id'
+
+    def get_user_last_name(self, obj):
+        return obj.user.last_name
+    get_user_last_name.short_description = 'last name'
+
+    def get_user_first_name(self, obj):
+        return obj.user.first_name
+    get_user_first_name.short_description = 'first name'
+
     # def lookup_allowed(self, lookup, value):
     #     return True
 
@@ -140,7 +154,7 @@ class Class_Admin(admin.ModelAdmin):
 @admin.register(Class_Meeting)
 class Class_Meeting_Admin(admin.ModelAdmin):
     list_display = ("id", "get_class", "start_time", "end_time", "day", "date")
-    search_fields = ("id", "cls__subject__name", "cls__faculty__last_name", "cls__faculty__first_name")
+    search_fields = ("id", "cls__subject__name", "cls__faculty__last_name", "cls__faculty__first_name", "cls__course__name")
 
     def get_class(self, obj):
         url = f'{reverse("admin:e_attendance_class_changelist")}?id={obj.cls.id}'
@@ -307,8 +321,12 @@ class Class_Attendance_Admin(admin.ModelAdmin):
 #========================================Campus Attendance===================================================
 @admin.register(Campus_Attendance)
 class Campus_Attendance_Admin(admin.ModelAdmin):
-    list_display = ("id", "user", "time_in", "time_out", "date")
-    search_fields = ("id", "user__last_name", "user__first_name", "date")
+    list_display = ("id", "get_user_id", "user", "time_in", "time_out", "date")
+    search_fields = ("id", "user__last_name", "user__first_name", "date", "user__user_id")
+
+    def get_user_id(self, obj):
+        return obj.user.user_id
+    get_user_id.short_description = 'user id'
 
 
 #========================================Faculty Attendance======================================================
@@ -323,14 +341,22 @@ class Faculty_Attendance_Admin_Form(forms.ModelForm):
 
 @admin.register(Faculty_Attendance)
 class Faculty_Attendance_Admin(admin.ModelAdmin):
-    list_display = ("id", "faculty", "time_in", "time_out", "date", "remarks")
+    list_display = ("id", "get_user_id", "faculty", "time_in", "time_out", "date", "remarks")
     search_fields = (
         "id", 
         "faculty__first_name", 
         "faculty__last_name", 
         "date", 
-        "remarks"
+        "remarks",
+        "faculty__user_id"
     )
+
+    def get_user_id(self, obj):
+        return obj.faculty.user_id
+    get_user_id.short_description = 'user id'
+
+    
+
     form = Faculty_Attendance_Admin_Form
 
 

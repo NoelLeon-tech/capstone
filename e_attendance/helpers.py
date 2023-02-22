@@ -5,22 +5,22 @@ import datetime
 def get_school_years(classes=None, class_students=None):
     if classes:
         # SELECT DISTINCT school_year from classes
-        return sorted(classes.values_list("school_year", flat=True).distinct()) 
+        return set(sorted(classes.values_list("school_year", flat=True).distinct())) 
     elif class_students:
-        return sorted(class_students.values_list("cls__school_year", flat=True).distinct())
+        return set(sorted(class_students.values_list("cls__school_year", flat=True).distinct()))
 
 
 def get_semesters(classes=None, class_students=None):
     if classes:
         # SELECT DISTINCT semester from classes
-        return sorted(classes.values_list("semester", flat=True).distinct())
+        return set(sorted(classes.values_list("semester", flat=True).distinct()))
     elif class_students:
-        return sorted(class_students.values_list("cls__semester", flat=True).distinct())
+        return set(sorted(class_students.values_list("cls__semester", flat=True).distinct()))
 
 
 def get_courses(classes):
     # SELECT DISTINCT course_id from classes
-    course_ids = classes.values_list("course_id", flat=True).distinct() 
+    course_ids = set(classes.values_list("course_id", flat=True).distinct()) 
     # elif class_students:
     #     course_ids = set(class_students.values_list("cls__course_id", flat=True).distinct())
     
@@ -81,11 +81,15 @@ def calculate_time_diff(time_in, start_time):
 #     time_diff_in_minutes = int(time_diff.seconds / 60)
 #     return time_diff_in_minutes    
     
-
-def calculate_time_diff_hours(start_time, end_time):
+# time2 must be greater than time1
+def calculate_time_diff_hours(time1, time2):
+    if time1 > time2:
+        return 0
     date = datetime.date(1, 1, 1)
-    time_diff = datetime.datetime.combine(date, end_time) - datetime.datetime.combine(date, start_time)
-    return time_diff.total_seconds() / 60**2
+    time_diff = datetime.datetime.combine(date, time2) - datetime.datetime.combine(date, time1)
+    total_seconds = time_diff.total_seconds()
+    return total_seconds / 60**2
+    
 
 
 # def calculate_time_diff_hours(start_time, end_time):

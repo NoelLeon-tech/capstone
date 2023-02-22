@@ -59,8 +59,11 @@
     {% if request.user|in_group:"faculty" %}
     <div class="col-12 col-lg-6">
         <div class="mb-3 d-flex justify-content-lg-end">
-            <a href="{% url 'e_attendance:generate_attendance_report' %}?class_id={{ class.id }}"
-                class="btn btn-primary me-2">
+            <a
+                id="generate-report-btn"
+                data-href="{% url 'e_attendance:generate_attendance_report' %}?class_id={{ class.id }}"
+                class="btn btn-primary me-2"
+            >
                 Generate Attendance Report
             </a>
             
@@ -248,10 +251,12 @@
     const resetBtn = document.querySelector("input[type='reset']")
     let searchParams = new URL(location.href).searchParams
 
+    let startDate = searchParams.get("start_date")
+    let endDate = searchParams.get("end_date")
     // for filter form
 
-    startDateInput.value = searchParams.get("start_date")
-    endDateInput.value = searchParams.get("end_date")
+    startDateInput.value = startDate
+    endDateInput.value = endDate
 
     resetBtn.onclick = () => {
         let studentId = searchParams.get("student_id")
@@ -259,13 +264,12 @@
         if (studentId) {
             location.href = location.origin + location.pathname + `?student_id=${studentId}`
         }
-        // for student
         else {
             location.href = location.origin + location.pathname
         }
     }
 
-    // for guardian's pagination
+    // for pagination
 
     const url = new URL(location.origin + location.pathname)
     
@@ -275,11 +279,11 @@
     lastPageBtn = document.querySelector("#last")
     
     
-    if (searchParams.get("start_date")) {
-        url.searchParams.append("start_date", searchParams.get("start_date"))
+    if (startDate) {
+        url.searchParams.append("start_date", startDate)
     }
-    if (searchParams.get("end_date")) {
-        url.searchParams.append("end_date", searchParams.get("end_date"))
+    if (endDate) {
+        url.searchParams.append("end_date", endDate)
     }
     if (searchParams.get("student_id")) {
         url.searchParams.append("student_id", searchParams.get("student_id"))
@@ -313,6 +317,17 @@
             url.searchParams.append("page_number", lastPageBtn.dataset.pageNum)
             location.href = url
         }
+    }
+
+    // For generate attendance report.
+    let generateAttendanceReportBtn = document.querySelector("#generate-report-btn")
+    generateAttendanceReportBtn.onclick = (e) => {
+        e.preventDefault()
+        let href = generateAttendanceReportBtn.dataset.href
+        if (startDate && endDate) {
+            href += `&start_date=${startDate}&end_date=${endDate}`
+        }
+        location.href = href
     }
 </script>
 {% endblock %}

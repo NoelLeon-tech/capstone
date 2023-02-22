@@ -5,11 +5,15 @@ from django.contrib.auth.models import AbstractUser
 
 ############################################# USER MODELS ##################################################
 class User(AbstractUser):
+    username = models.CharField(max_length=150, null=True, blank=True)
+    user_id = models.CharField(max_length=150, unique=True, null=True)
     middle_name = models.CharField(max_length=100, blank=True, null=True)
     address = models.CharField(max_length=100, blank=True, null=True)
 
+    USERNAME_FIELD = "user_id"
+
     def __str__(self):
-        return f"({self.id}) {self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
     
 
 class Student(models.Model):
@@ -110,7 +114,7 @@ class Class(models.Model):
     strand = models.ForeignKey(Strand, on_delete=models.SET_NULL, blank=True, null=True)
     year = models.IntegerField()
     block = models.IntegerField()
-    school_year = models.IntegerField()
+    school_year = models.CharField(max_length=10)
     semester = models.IntegerField()
     total_hours = models.IntegerField()
 

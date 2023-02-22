@@ -121,7 +121,7 @@ def get_class_attendances(request, class_id):
             "page": page
         })
 
-                                           # Guardian
+    # Guardian
     elif request.user.groups.filter(name="guardians").exists():
         student = User.objects.get(pk=request.GET.get("student_id"))
         class_attendances = Class_Attendance.objects.filter(
@@ -136,7 +136,8 @@ def get_class_attendances(request, class_id):
             "page": page,
             "student": student
         })
-                                                #Faculty
+
+    #Faculty
     elif request.user.groups.filter(name="faculty").exists():
         class_meetings = []
         for class_meeting in Class_Meeting.objects.filter(cls=cls, date__range=[start_date, end_date]).order_by("-date"):
@@ -343,70 +344,90 @@ def create_class_meeting_qr_code(request):
 @login_required
 def generate_attendance_report(request):
     class_id = request.GET.get("class_id")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
 
     #Object-Relational Mapping
     cls = Class.objects.get(pk=class_id)
+    class_attendances = None
+    class_meetings = None
+    if (start_date and end_date):
+        class_attendances = Class_Attendance.objects.filter(
+            class_meeting__cls=cls,
+            class_meeting__date__range=[start_date, end_date]
+        )
+        class_meetings = Class_Meeting.objects.filter(
+            cls=cls,
+            date__range=[start_date, end_date]
+        ).order_by("date")
+    else:
+        class_attendances = Class_Attendance.objects.filter(class_meeting__cls=cls)
+        class_meetings = Class_Meeting.objects.filter(cls=cls).order_by("date")
     
     filename = ""
+
     if request.user.groups.filter(name="faculty").exists():
         filename = f"{cls.subject.name}-{cls.course.name if cls.course else cls.strand.name}-{cls.year}-{cls.block}.xlsx"
         workbook = xlsxwriter.Workbook(filename)
+
         h1 = workbook.add_format({"bold": True, "font_size": 16})
         h2 = workbook.add_format({"bold": True, "font_size": 12})
         bold = workbook.add_format({'bold': True})
+
         worksheet = workbook.add_worksheet()
+
         worksheet.write(0, 0, "Attendance Report", h1)
         worksheet.write(1, 0, f"Subject: {cls.subject.name}", h2)
         worksheet.write(2, 0, f"Course/Strand: {cls.course.name if cls.course else cls.strand.name}", h2)
         worksheet.write(3, 0, f"Year/Grade: {cls.year}", h2)
         worksheet.write(4, 0, f"Block: {cls.block}", h2)
-        worksheet.write(
-            5, 
-            0, 
-            f"Number of meetings: {Class_Meeting.objects.filter(cls=cls).count()}",
-            h2
-        )
-        worksheet.write(8, 0, "Last Name", bold)
-        worksheet.write(8, 1, "First Name", bold) 
-        worksheet.write(8, 2, "Tardiness in hours", bold)
-        worksheet.write(8, 3, "Absences in hours", bold)
-        worksheet.write(8, 4, "Is dropped?", bold)
+        first_meeting_date = class_meetings.first().date
+        last_meeting_date = class_meetings.last().date
+        worksheet.write(5, 0, f"Date range: {first_meeting_date} - {last_meeting_date}", h2)
+        worksheet.write(6, 0, f"Number of meetings: {class_meetings.count()}", h2)
 
-        row = 9
+        worksheet.write(9, 0, "Last Name", bold)
+        worksheet.write(9, 1, "First Name", bold) 
+        worksheet.write(9, 2, "Tardiness in hours", bold)
+        worksheet.write(9, 3, "Absences in hours", bold)
+        worksheet.write(9, 4, "Is dropped?", bold)
 
+        row = 10
+
+        # Loop through each student and encode needed info
         for cs in Class_Student.objects.filter(cls=cls).order_by("student__last_name"):
+            # Encode the student's last name
             worksheet.write(row, 0, cs.student.last_name)
 
+            # Encode the student's first name
             worksheet.write(row, 1, cs.student.first_name)
 
-            # Compute student's tardiness.
+            # Compute and encode student's tardiness.
+            late_class_attendances = class_attendances.filter(student=cs.student, remarks="Late")
             hours_late = 0
-            for class_attendance in Class_Attendance.objects.filter(
-                class_meeting__cls=cls,
-                # class_meeting__date__range=[start_date, end_date],
-                student=cs.student,
-                remarks = "Late"
-            ):
-                hours_late += calculate_time_diff_hours(class_attendance.class_meeting.start_time, class_attendance.time_in)
+            for class_attendance in late_class_attendances:
+                hours_late += calculate_time_diff_hours(
+                    class_attendance.class_meeting.start_time, 
+                    class_attendance.time_in
+                )
             worksheet.write(row, 2, round(hours_late, 2))
                         
-            # Compute student's absences and if dropped.
-            hours_absent = 0
-            for class_attendance in Class_Attendance.objects.filter(
-                class_meeting__cls=cls,
-                student=cs.student,
-                remarks = "Absent"
-            ):
+            # Compute and encode student's absences and if dropped.
+            absent_class_attendances = class_attendances.filter(student=cs.student, remarks="Absent")
+            hours_absent = hours_late
+            for class_attendance in absent_class_attendances:
                 hours_absent += calculate_time_diff_hours(class_attendance.class_meeting.start_time, class_attendance.class_meeting.end_time)
             
-            worksheet.write(row, 3, round(hours_absent + hours_late, 2))
-            worksheet.write(row, 4, "Yes" if (hours_absent + hours_late) >= (cls.total_hours * .2) else "No")
+            worksheet.write(row, 3, round(hours_absent, 2))
+            worksheet.write(row, 4, "Yes" if (hours_absent) >= (cls.total_hours * .2) else "No")
             row += 1
 
+            # Resize column width
             worksheet.set_column(0, 20, 18)
 
         workbook.close()
-                        # read file
+    
+    # read file
     file = open(filename, "rb")
     response = HttpResponse(file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename={filename}'
@@ -577,6 +598,7 @@ def read_message(request):
 @login_required
 def generate_model_spreadsheet(request):
     model_name = request.GET.get("model_name")
+    q = request.GET.get("q", "")
     filename = f"{model_name}.xlsx"
     workbook = xlsxwriter.Workbook(filename, {'remove_timezone': True})
     # h1 = workbook.add_format({"bold": True, "font_size": 16})
@@ -591,18 +613,62 @@ def generate_model_spreadsheet(request):
                 fields.append(field.name)
 
         fields.remove("password")
-
-        for i, field in enumerate(fields):
+        fields.remove("username")
+        fields.remove("is_superuser")
+        fields.remove("is_staff")
+        fields.remove("is_active")
+        fields.remove("id")
+        
+        new_fields = [""] * 8
+        for field in fields:
+            if field == "user_id":
+                new_fields[0] = field
+            elif field == "last_name":
+                new_fields[1] = field
+            elif field == "first_name":
+                new_fields[2] = field
+            elif field == "middle_name":
+                new_fields[3] = field
+            elif field == "address":
+                new_fields[4] = field
+            elif field == "email":
+                new_fields[5] = field
+            elif field == "date_joined":
+                new_fields[6] = field
+            elif field == "last_login":
+                new_fields[7] = field
+        
+        for i, field in enumerate(new_fields):
             worksheet.write(0, i, field, bold)
-
-        for i, user in enumerate(User.objects.all().order_by("-id")):
+            
+        for i, user in enumerate(User.objects.filter(
+            Q(id__icontains=q) |
+            Q(user_id__icontains=q) |
+            Q(first_name__icontains=q) |
+            Q(middle_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(groups__name__icontains=q)
+        ).order_by("-user_id")):
             user = user.__dict__
-            for j, field in enumerate(fields):
-                if field == "date_joined" or field == "last_login":
+            for j, field in enumerate(new_fields):
+                if field == "user_id":
+                    worksheet.write(i + 1, 0, user.get(field))
+                elif field == "last_name":
+                    worksheet.write(i + 1, 1, user.get(field))
+                elif field == "first_name":
+                    worksheet.write(i + 1, 2, user.get(field))
+                elif field == "middle_name":
+                    worksheet.write(i + 1, 3, user.get(field))
+                elif field == "address":
+                    worksheet.write(i + 1, 4, user.get(field))
+                elif field == "email":
+                    worksheet.write(i + 1, 5, user.get(field))
+                elif field == "date_joined":
                     if user.get(field):
-                        worksheet.write(i + 1, j, user.get(field).strftime("%Y-%m-%d"))
-                else:
-                    worksheet.write(i + 1, j, user.get(field))
+                        worksheet.write(i + 1, 6, user.get(field).strftime("%Y-%m-%d"))
+                elif field == "last_login":
+                    if user.get(field):
+                        worksheet.write(i + 1, 7, user.get(field).strftime("%Y-%m-%d"))
 
         
     elif model_name == "class":
@@ -614,7 +680,19 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, cls in enumerate(Class.objects.all().order_by("-id")):
+        for i, cls in enumerate(Class.objects.filter(
+            Q(id__icontains=q) |
+            Q(subject__name__icontains=q) |
+            Q(faculty__first_name__icontains=q) |
+            Q(faculty__last_name__icontains=q) |
+            Q(year__icontains=q) |
+            Q(course__name__icontains=q) |
+            Q(strand__name__icontains=q) |
+            Q(block__icontains=q) |
+            Q(school_year__icontains=q) |
+            Q(semester__icontains=q) |
+            Q(total_hours__icontains=q)
+        ).order_by("-id")):
             cls = cls.__dict__
             for j, field in enumerate(fields):
                 worksheet.write(i + 1, j, cls.get(field))
@@ -684,7 +762,8 @@ def generate_model_spreadsheet(request):
     elif model_name == "student":
         fields = []
         for field in Student._meta.get_fields():
-            fields.append(field.name)
+            if field.name != "id":
+                fields.append(field.name)
 
         worksheet.write(0, 1, "Last name", bold)
         worksheet.write(0, 2, "First name", bold)
@@ -695,7 +774,12 @@ def generate_model_spreadsheet(request):
             else:
                 worksheet.write(0, i + 2, field, bold)
 
-        for i, student in enumerate(Student.objects.all().order_by("-id")):
+        for i, student in enumerate(Student.objects.filter(
+            Q(user__last_name__icontains=q) |
+            Q(user__first_name__icontains=q) |
+            Q(user__user_id__icontains=q) 
+            
+        ).order_by("-user__id")):
             student = student.__dict__
             user = User.objects.get(pk=student.get("user_id"))
             worksheet.write(i + 1, 1, user.last_name)
@@ -770,22 +854,38 @@ def generate_model_spreadsheet(request):
         for field in Faculty_Attendance._meta.get_fields():
             fields.append(field.name)
 
-        for i, field in enumerate(fields):
-            worksheet.write(0, i, field, bold)
+        worksheet.write(0, 1, "user_id", bold)        
 
-        for i, faculty_attendance in enumerate(Faculty_Attendance.objects.all().order_by("-id")):
+        for i, field in enumerate(fields):
+            if field == "id":
+                worksheet.write(0, 0, field, bold)
+            else:
+                worksheet.write(0, i + 1, field, bold)
+
+        for i, faculty_attendance in enumerate(Faculty_Attendance.objects.filter(
+            Q(id__icontains=q) |
+            Q(faculty__first_name__icontains=q) |
+            Q(faculty__last_name__icontains=q) |
+            Q(date__icontains=q) |
+            Q(remarks__icontains=q) |
+            Q(faculty__user_id__icontains=q)
+        ).order_by("-id")):
             faculty_attendance = faculty_attendance.__dict__
+            user = User.objects.get(pk=faculty_attendance.get("faculty_id"))
+            worksheet.write(i + 1, 1, user.user_id)
             for j, field in enumerate(fields):
+                if field == "id":
+                    worksheet.write(i + 1, 0, faculty_attendance.get(field))
                 if field == "faculty":
                     user = User.objects.get(pk=faculty_attendance.get(field + "_id"))
-                    worksheet.write(i + 1, j, f"{user.last_name}, {user.first_name}")
+                    worksheet.write(i + 1, j + 2, f"{user.last_name}, {user.first_name}")                    
                 elif field == "time_in" or field == "time_out":
                     if faculty_attendance.get(field):
-                        worksheet.write(i + 1, j, faculty_attendance.get(field).strftime("%I:%M %p"))
+                        worksheet.write(i + 1, j + 2, faculty_attendance.get(field).strftime("%I:%M %p"))
                 elif field == "date":
-                        worksheet.write(i + 1, j, faculty_attendance.get(field).strftime("%Y-%m-%d"))
+                        worksheet.write(i + 1, j + 2, faculty_attendance.get(field).strftime("%Y-%m-%d"))
                 else:
-                    worksheet.write(i + 1, j, faculty_attendance.get(field))
+                    worksheet.write(i + 1, j + 2, faculty_attendance.get(field))
 
 
     elif model_name == "faculty":
@@ -845,7 +945,12 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, event_attendance in enumerate(Event_Attendance.objects.all().order_by("-id")):
+        for i, event_attendance in enumerate(Event_Attendance.objects.filter(
+            Q(id__icontains=q) |
+            Q(event__name__icontains=q) |
+            Q(student__first_name__icontains=q) |
+            Q(student__last_name__icontains=q)
+        ).order_by("-id")):
             event_attendance = event_attendance.__dict__
             for j, field in enumerate(fields):
                 if field == "event":
@@ -881,22 +986,37 @@ def generate_model_spreadsheet(request):
         for field in Campus_Attendance._meta.get_fields():
             fields.append(field.name)
 
-        for i, field in enumerate(fields):
-            worksheet.write(0, i, field, bold)
+        worksheet.write(0, 1, "user_id", bold)    
 
-        for i, campus_attendance in enumerate(Campus_Attendance.objects.all().order_by("-id")):
+        for i, field in enumerate(fields):
+            if field == "id":
+                worksheet.write(0, 0, field, bold)
+            else:
+                worksheet.write(0, i + 1, field, bold)
+
+        for i, campus_attendance in enumerate(Campus_Attendance.objects.filter(
+            Q(id__icontains=q) |
+            Q(user__last_name__icontains=q) |
+            Q(user__first_name__icontains=q) |
+            Q(date__icontains=q) |
+            Q(user__user_id__icontains=q)
+        ).order_by("-id")):
             campus_attendance = campus_attendance.__dict__
+            user = User.objects.get(pk=campus_attendance.get("user_id"))
+            worksheet.write(i + 1, 1, user.user_id)
             for j, field in enumerate(fields):
-                if field == "user":
+                if field == "id":
+                    worksheet.write(i + 1, 0, campus_attendance.get(field))
+                elif field == "user":
                     user = User.objects.get(pk=campus_attendance.get(field + "_id"))
-                    worksheet.write(i + 1, j, f"{user.last_name}, {user.first_name}")
+                    worksheet.write(i + 1, j + 1, f"{user.last_name}, {user.first_name}")
                 elif field == "time_in" or field == "time_out":
                     if campus_attendance.get(field):
-                        worksheet.write(i + 1, j, campus_attendance.get(field).strftime("%I:%M %p"))
+                        worksheet.write(i + 1, j + 1, campus_attendance.get(field).strftime("%I:%M %p"))
                 elif field == "date":
-                    worksheet.write(i + 1, j, campus_attendance.get(field).strftime("%Y-%m-%d"))
+                    worksheet.write(i + 1, j + 1, campus_attendance.get(field).strftime("%Y-%m-%d"))
                 else:
-                    worksheet.write(i + 1, j, campus_attendance.get(field))
+                    worksheet.write(i + 1, j + 1, campus_attendance.get(field))
 
 
     elif model_name == "class_student":
@@ -907,7 +1027,15 @@ def generate_model_spreadsheet(request):
         for i, field in enumerate(fields):
             worksheet.write(0, i, field, bold)
 
-        for i, class_student in enumerate(Class_Student.objects.all().order_by("-id")):
+        for i, class_student in enumerate(Class_Student.objects.filter(
+            Q(id__icontains=q) | 
+            Q(cls__subject__name__icontains=q) |
+            Q(student__first_name__icontains=q) | 
+            Q(student__last_name__icontains=q) |
+            Q(cls__faculty__first_name__icontains=q) |
+            Q(cls__faculty__last_name__icontains=q) |
+            Q(cls__course__name__icontains=q)
+        ).order_by("-id")):
             class_student = class_student.__dict__
             for j, field in enumerate(fields):
                 if field == "cls":
@@ -923,6 +1051,43 @@ def generate_model_spreadsheet(request):
                     worksheet.write(i + 1, j, class_student.get(field))
 
 
+    elif model_name == "class_attendance":
+        fields = []
+        for field in Class_Attendance._meta.get_fields():
+            fields.append(field.name)  
+
+        for i, field in enumerate(fields):          
+            worksheet.write(0, i, field, bold)
+
+        for i, class_attendance in enumerate(Class_Attendance.objects.filter(
+            Q(id__icontains=q) |
+            Q(class_meeting__cls__subject__name__icontains=q) |
+            Q(class_meeting__cls__faculty__first_name__icontains=q) |
+            Q(class_meeting__cls__faculty__last_name__icontains=q) |
+            Q(class_meeting__cls__course__name__icontains=q) |
+            Q(student__first_name__icontains=q) |
+            Q(student__last_name__icontains=q) |
+            Q(time_in__icontains=q) |
+            Q(time_out__icontains=q) |
+            Q(remarks__icontains=q)
+        ).order_by("-id")):
+            class_attendance = class_attendance.__dict__
+            # user = User.objects.get(pk=class_attendance.get("user_id"))
+            # worksheet.write(i + 1, 1, user.user_id)
+            for j, field in enumerate(fields):
+                if field == "class_meeting":
+                    cm = Class_Meeting.objects.get(pk=class_attendance.get(field + "_id"))
+                    worksheet.write(i + 1, j, f"{cm}")
+                elif field == "student":
+                    user = User.objects.get(pk=class_attendance.get(field + "_id"))
+                    worksheet.write(i + 1, j, f"{user.last_name}, {user.first_name}")
+                elif field == "time_in" or field == "time_out":
+                    if class_attendance.get(field):
+                        worksheet.write(i + 1, j, class_attendance.get(field).strftime("%I:%M %p"))
+                else:
+                    worksheet.write(i + 1, j, class_attendance.get(field))
+
+
     elif model_name == "class_meeting":
         fields = []
         for field in Class_Meeting._meta.get_fields():
@@ -936,7 +1101,12 @@ def generate_model_spreadsheet(request):
             else:    
                 worksheet.write(0, i, field, bold)
 
-        for i, class_meeting in enumerate(Class_Meeting.objects.all().order_by("-id")):
+        for i, class_meeting in enumerate(Class_Meeting.objects.filter(
+            Q(id__icontains=q) |
+            Q(cls__subject__name__icontains=q) |
+            Q(cls__faculty__last_name__icontains=q) |
+            Q(cls__faculty__first_name__icontains=q)
+        ).order_by("-id")):
             class_meeting = class_meeting.__dict__
             for j, field in enumerate(fields):
                 if field == "cls":
@@ -954,8 +1124,8 @@ def generate_model_spreadsheet(request):
                 else:
                     worksheet.write(i + 1, j, class_meeting.get(field))
 
+    worksheet.set_column(0, 20, 20)
 
-    
     workbook.close()
     file = open(filename, "rb")
     response = HttpResponse(file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
